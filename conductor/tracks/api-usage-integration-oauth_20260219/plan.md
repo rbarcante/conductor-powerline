@@ -24,7 +24,7 @@
 - [x] Task: Create `internal/oauth/usage_test.go` — tests for FetchUsage orchestration (fresh fetch, cache hit, stale fallback, first-run placeholder) [54d301b]
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Usage Segments & Trends
+## Phase 3: Usage Segments & Trends [checkpoint: 6dc9c9b]
 
 - [x] Task: Create `internal/segments/block_test.go` — tests for 5-hour block segment (percentage display, countdown format, color thresholds, nil data shows `--`) [4e1d1da]
 - [x] Task: Create `internal/segments/block.go` — 5-hour block usage segment with percentage, countdown, and theme-aware color intensity [4e1d1da]
@@ -36,9 +36,9 @@
 
 ## Phase 4: Integration & Config Update
 
-- [ ] Task: Update `internal/config/types.go` — add `APITimeout`, `CacheTTL`, `TrendThreshold` fields to Config; add `block` and `weekly` to SegmentConfig
-- [ ] Task: Update `internal/config/config.go` — add defaults for new config fields; update default `segmentOrder` to include `block` and `weekly`
-- [ ] Task: Update `internal/config/config_test.go` — tests for new config fields, defaults, and merge behavior
-- [ ] Task: Update `main.go` — wire OAuth token retrieval, API usage fetch (parallelized with git via `sync.WaitGroup`), register `block` and `weekly` segment builders
-- [ ] Task: Update `main_test.go` — integration tests for full pipeline with usage segments (mock HTTP, mock exec)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+- [x] Task: Update `internal/config/types.go` — add `APITimeout`, `CacheTTL`, `TrendThreshold` fields to Config; add `block` and `weekly` to SegmentConfig [8917fbf]
+- [x] Task: Update `internal/config/config.go` — add defaults for new config fields; update default `segmentOrder` to include `block` and `weekly` [8917fbf]
+- [x] Task: Update `internal/config/config_test.go` — tests for new config fields, defaults, and merge behavior [8917fbf]
+- [x] Task: Update `main.go` — wire OAuth token retrieval, API usage fetch (parallelized with git via `sync.WaitGroup`), register `block` and `weekly` segment builders [8917fbf]
+- [x] Task: Update `main_test.go` — integration tests for full pipeline with usage segments (mock HTTP, mock exec) [8917fbf]
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
