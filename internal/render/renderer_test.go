@@ -108,6 +108,75 @@ func TestRenderNoTrailingNewline(t *testing.T) {
 	}
 }
 
+// --- Tests for RenderRight (left-pointing arrow separators) ---
+
+func TestRenderRightSingleSegment(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "context", Text: "○ 30%", FG: "231", BG: "36", Enabled: true},
+	}
+
+	out := RenderRight(segs, true)
+	if !strings.Contains(out, "○ 30%") {
+		t.Error("expected '○ 30%' in output")
+	}
+	if !strings.Contains(out, SeparatorLeftNerd) {
+		t.Error("expected left-pointing nerd font separator")
+	}
+	if !strings.Contains(out, "\033[") {
+		t.Error("expected ANSI escape codes")
+	}
+}
+
+func TestRenderRightEmpty(t *testing.T) {
+	out := RenderRight(nil, true)
+	if out != "" {
+		t.Errorf("expected empty output for nil segments, got %q", out)
+	}
+
+	out = RenderRight([]segments.Segment{}, true)
+	if out != "" {
+		t.Errorf("expected empty output for empty segments, got %q", out)
+	}
+}
+
+func TestRenderRightDisabledSkipped(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "context", Text: "○ 30%", FG: "231", BG: "36", Enabled: false},
+	}
+
+	out := RenderRight(segs, true)
+	if out != "" {
+		t.Errorf("expected empty output for disabled segments, got %q", out)
+	}
+}
+
+func TestRenderRightTextFallback(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "context", Text: "CTX 30%", FG: "231", BG: "36", Enabled: true},
+	}
+
+	out := RenderRight(segs, false)
+	if !strings.Contains(out, "CTX 30%") {
+		t.Error("expected 'CTX 30%' in output")
+	}
+	if strings.Contains(out, SeparatorLeftNerd) {
+		t.Error("should not contain nerd font separator in text mode")
+	}
+	// Single segment has no separator; ANSI codes still present
+	if !strings.Contains(out, "\033[") {
+		t.Error("expected ANSI escape codes")
+	}
+}
+
+func TestLeftArrowSymbolsDefined(t *testing.T) {
+	if SeparatorLeftNerd == "" {
+		t.Error("SeparatorLeftNerd must be defined")
+	}
+	if SeparatorLeftText == "" {
+		t.Error("SeparatorLeftText must be defined")
+	}
+}
+
 func TestRenderSegmentOrder(t *testing.T) {
 	segs := []segments.Segment{
 		{Name: "model", Text: "Opus", FG: "15", BG: "57", Enabled: true},
