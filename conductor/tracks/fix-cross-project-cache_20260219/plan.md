@@ -11,7 +11,7 @@
   - TDD: Test that `buildSegments` passes workspace correctly
 - [x] Task 1.3: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: Implement File-Based Usage Cache `[status: complete]`
+## Phase 2: Implement File-Based Usage Cache `[status: complete]` [checkpoint: 1a02cf2]
 
 - [x] Task 2.1: Create `internal/oauth/filecache.go` with file-based cache [11ac6a6]
   - Implement `FileCache` struct with `Store(key string, data *UsageData)` and `Get(key string) *UsageData`
@@ -25,17 +25,17 @@
   - TDD: Test cleanup removes old files, keeps recent ones
 - [x] Task 2.3: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Integration — Replace In-Memory Cache with File Cache `[status: pending]`
+## Phase 3: Integration — Replace In-Memory Cache with File Cache `[status: complete]`
 
-- [ ] Task 3.1: Update `oauth.FetchUsage()` to use `FileCache`
+- [x] Task 3.1: Update `oauth.FetchUsage()` to use `FileCache` [4071462]
   - Replace `Cache` parameter with `FileCache` (or introduce interface)
   - Pass workspace-derived key to cache operations
   - TDD: Test FetchUsage with file-based cache (cache hit, cache miss, stale data)
-- [ ] Task 3.2: Update `main.go` to instantiate `FileCache` and pass workspace key
+- [x] Task 3.2: Update `main.go` to instantiate `FileCache` and pass workspace key [4071462]
   - Remove in-memory `oauth.NewCache()` call
   - Create `FileCache` once, pass `hookData.WorkspacePath()` as cache key source
   - TDD: Verify main.go wiring
-- [ ] Task 3.3: Remove old `internal/oauth/cache.go` and its tests
+- [x] Task 3.3: Remove old `internal/oauth/cache.go` and its tests [643b311]
   - Delete in-memory cache code (now fully replaced)
   - Ensure no imports reference old cache
-- [ ] Task 3.4: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task 3.4: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
