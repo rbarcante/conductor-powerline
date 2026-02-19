@@ -1,0 +1,9 @@
+{
+  "id": "statusline-not-showing-claude_20260219",
+  "type": "bugfix",
+  "status": "planned",
+  "priority": "high",
+  "created": "2026-02-19",
+  "branch": "bugfix/statusline-not-showing",
+  "description": "Statusline not showing on Claude Code"
+}
