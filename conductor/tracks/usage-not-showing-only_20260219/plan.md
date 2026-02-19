@@ -8,7 +8,7 @@
 - [x] Task: Instrument `main.run()` with debug logs for segment build and usage data status [1a2fc00]
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: Root Cause Investigation & Fix
+## Phase 2: Root Cause Investigation & Fix [checkpoint: 6ab3efa]
 
 - [x] Task: Run the tool with `CONDUCTOR_DEBUG=1` to identify the exact failure point in the OAuth → API pipeline [diagnosis]
     - Root cause: credfile.go expects `{"oauthToken":"..."}` but actual format is `{"claudeAiOauth":{"accessToken":"..."}}`
@@ -20,7 +20,8 @@
 
 ## Phase 3: Test Coverage & Cleanup
 
-- [ ] Task: Add unit tests for the debug logging package (enable/disable, stderr output)
-- [ ] Task: Update existing OAuth and segment tests to cover the fixed behavior
-- [ ] Task: Run full test suite and verify >80% coverage
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Add unit tests for the debug logging package (enable/disable, stderr output) [75eee8e]
+    - Already at 100% coverage from Phase 1
+- [x] Task: Update existing OAuth and segment tests to cover the fixed behavior [7d16fc6]
+- [x] Task: Run full test suite and verify >80% coverage
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
