@@ -22,6 +22,7 @@ func TestThemeSegmentColors(t *testing.T) {
 		"directory", "git", "model",
 		"block", "weekly", "opus", "sonnet", "context",
 		"warning", "critical",
+		"conductor", "conductor_missing",
 	}
 
 	for _, name := range expectedThemes {
