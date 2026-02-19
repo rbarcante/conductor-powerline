@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -18,7 +19,7 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Display.CompactWidth != 80 {
 		t.Errorf("expected default CompactWidth 80, got %d", cfg.Display.CompactWidth)
 	}
-	expectedOrder := []string{"directory", "git", "model"}
+	expectedOrder := []string{"directory", "git", "model", "block", "weekly"}
 	if len(cfg.SegmentOrder) != len(expectedOrder) {
 		t.Fatalf("expected %d segment order items, got %d", len(expectedOrder), len(cfg.SegmentOrder))
 	}
@@ -36,6 +37,16 @@ func TestDefaultConfig(t *testing.T) {
 		if !seg.Enabled {
 			t.Errorf("expected segment %q enabled by default", name)
 		}
+	}
+
+	if cfg.APITimeout.Duration != 5*time.Second {
+		t.Errorf("expected default APITimeout 5s, got %v", cfg.APITimeout.Duration)
+	}
+	if cfg.CacheTTL.Duration != 30*time.Second {
+		t.Errorf("expected default CacheTTL 30s, got %v", cfg.CacheTTL.Duration)
+	}
+	if cfg.TrendThreshold != 2.0 {
+		t.Errorf("expected default TrendThreshold 2.0, got %f", cfg.TrendThreshold)
 	}
 }
 
@@ -161,8 +172,57 @@ func TestMergeConfigPartialOverride(t *testing.T) {
 		t.Errorf("expected CompactWidth 80 from base, got %d", merged.Display.CompactWidth)
 	}
 	// Segment order should stay default
-	if len(merged.SegmentOrder) != 3 {
-		t.Errorf("expected 3 segment order items from base, got %d", len(merged.SegmentOrder))
+	if len(merged.SegmentOrder) != 5 {
+		t.Errorf("expected 5 segment order items from base, got %d", len(merged.SegmentOrder))
+	}
+}
+
+func TestMergeConfigNewFields(t *testing.T) {
+	base := DefaultConfig()
+	override := Config{
+		APITimeout:     Duration{10 * time.Second},
+		CacheTTL:       Duration{60 * time.Second},
+		TrendThreshold: 5.0,
+	}
+
+	merged := MergeConfig(base, override)
+
+	if merged.APITimeout.Duration != 10*time.Second {
+		t.Errorf("expected APITimeout 10s, got %v", merged.APITimeout.Duration)
+	}
+	if merged.CacheTTL.Duration != 60*time.Second {
+		t.Errorf("expected CacheTTL 60s, got %v", merged.CacheTTL.Duration)
+	}
+	if merged.TrendThreshold != 5.0 {
+		t.Errorf("expected TrendThreshold 5.0, got %f", merged.TrendThreshold)
+	}
+}
+
+func TestLoadFromFileWithNewFields(t *testing.T) {
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, ".conductor-powerline.json")
+
+	content := `{
+		"apiTimeout": "10s",
+		"cacheTTL": "1m",
+		"trendThreshold": 3.5
+	}`
+	if err := os.WriteFile(cfgPath, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := LoadFromFile(cfgPath)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.APITimeout.Duration != 10*time.Second {
+		t.Errorf("expected APITimeout 10s, got %v", cfg.APITimeout.Duration)
+	}
+	if cfg.CacheTTL.Duration != 1*time.Minute {
+		t.Errorf("expected CacheTTL 1m, got %v", cfg.CacheTTL.Duration)
+	}
+	if cfg.TrendThreshold != 3.5 {
+		t.Errorf("expected TrendThreshold 3.5, got %f", cfg.TrendThreshold)
 	}
 }
 
@@ -198,7 +258,7 @@ func TestLoadNoFiles(t *testing.T) {
 	if cfg.Theme != "dark" {
 		t.Errorf("expected default theme 'dark', got %q", cfg.Theme)
 	}
-	if len(cfg.SegmentOrder) != 3 {
-		t.Errorf("expected 3 default segments, got %d", len(cfg.SegmentOrder))
+	if len(cfg.SegmentOrder) != 5 {
+		t.Errorf("expected 5 default segments, got %d", len(cfg.SegmentOrder))
 	}
 }

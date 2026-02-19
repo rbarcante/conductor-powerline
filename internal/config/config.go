@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"time"
 )
 
 // DefaultConfig returns the default configuration with all segments enabled.
@@ -17,8 +18,13 @@ func DefaultConfig() Config {
 			"directory": {Enabled: true},
 			"git":       {Enabled: true},
 			"model":     {Enabled: true},
+			"block":     {Enabled: true},
+			"weekly":    {Enabled: true},
 		},
-		SegmentOrder: []string{"directory", "git", "model"},
+		SegmentOrder:   []string{"directory", "git", "model", "block", "weekly"},
+		APITimeout:     Duration{5 * time.Second},
+		CacheTTL:       Duration{30 * time.Second},
+		TrendThreshold: 2.0,
 	}
 }
 
@@ -71,6 +77,18 @@ func MergeConfig(base, override Config) Config {
 
 	if len(override.SegmentOrder) > 0 {
 		merged.SegmentOrder = override.SegmentOrder
+	}
+
+	if override.APITimeout.Duration != 0 {
+		merged.APITimeout = override.APITimeout
+	}
+
+	if override.CacheTTL.Duration != 0 {
+		merged.CacheTTL = override.CacheTTL
+	}
+
+	if override.TrendThreshold != 0 {
+		merged.TrendThreshold = override.TrendThreshold
 	}
 
 	return merged
