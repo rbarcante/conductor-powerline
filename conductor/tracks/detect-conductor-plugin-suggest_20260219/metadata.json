@@ -1,0 +1,9 @@
+{
+  "id": "detect-conductor-plugin-suggest_20260219",
+  "type": "feature",
+  "status": "planned",
+  "priority": "medium",
+  "branch": "feature/detect-conductor-plugin",
+  "created": "2026-02-19",
+  "description": "Detect conductor plugin and suggest installation"
+}
