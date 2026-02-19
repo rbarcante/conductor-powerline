@@ -16,52 +16,53 @@ type Theme struct {
 }
 
 var registry = map[string]Theme{
+	// Colors ported from claude-limitline hex values via hexToAnsi256 conversion
 	"dark": {
 		Name: "dark",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "15", BG: "236"},
-			"git":       {FG: "15", BG: "22"},
-			"model":     {FG: "15", BG: "57"},
+			"directory": {FG: "231", BG: "130"}, // #8b4513 / #ffffff
+			"git":       {FG: "231", BG: "237"}, // #404040 / #ffffff
+			"model":     {FG: "231", BG: "236"}, // #2d2d2d / #ffffff
 		},
 	},
 	"light": {
 		Name: "light",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "0", BG: "254"},
-			"git":       {FG: "0", BG: "120"},
-			"model":     {FG: "15", BG: "99"},
+			"directory": {FG: "231", BG: "209"}, // #ff6b47 / #ffffff
+			"git":       {FG: "231", BG: "116"}, // #4fb3d9 / #ffffff
+			"model":     {FG: "16", BG: "153"},   // #87ceeb / #000000
 		},
 	},
 	"nord": {
 		Name: "nord",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "15", BG: "60"},
-			"git":       {FG: "15", BG: "71"},
-			"model":     {FG: "15", BG: "110"},
+			"directory": {FG: "189", BG: "60"},  // #434c5e / #d8dee9
+			"git":       {FG: "151", BG: "60"},  // #3b4252 / #a3be8c
+			"model":     {FG: "146", BG: "66"},  // #4c566a / #81a1c1
 		},
 	},
 	"gruvbox": {
 		Name: "gruvbox",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "223", BG: "239"},
-			"git":       {FG: "223", BG: "100"},
-			"model":     {FG: "223", BG: "124"},
+			"directory": {FG: "223", BG: "95"},  // #504945 / #ebdbb2
+			"git":       {FG: "185", BG: "59"},  // #3c3836 / #b8bb26
+			"model":     {FG: "145", BG: "102"}, // #665c54 / #83a598
 		},
 	},
 	"tokyo-night": {
 		Name: "tokyo-night",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "189", BG: "236"},
-			"git":       {FG: "189", BG: "29"},
-			"model":     {FG: "189", BG: "62"},
+			"directory": {FG: "147", BG: "60"},  // #2f334d / #82aaff
+			"git":       {FG: "193", BG: "59"},  // #1e2030 / #c3e88d
+			"model":     {FG: "219", BG: "23"},  // #191b29 / #fca7ea
 		},
 	},
 	"rose-pine": {
 		Name: "rose-pine",
 		Segments: map[string]SegmentColors{
-			"directory": {FG: "189", BG: "238"},
-			"git":       {FG: "189", BG: "96"},
-			"model":     {FG: "189", BG: "132"},
+			"directory": {FG: "183", BG: "59"},  // #26233a / #c4a7e7
+			"git":       {FG: "152", BG: "59"},  // #1f1d2e / #9ccfd8
+			"model":     {FG: "224", BG: "17"},  // #191724 / #ebbcba
 		},
 	},
 }
