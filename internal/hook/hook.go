@@ -118,9 +118,17 @@ func (d Data) ContextWindow() *ContextWindow {
 }
 
 // ContextPercent returns the context window usage as a rounded percentage (0-100).
-// Returns -1 if context window data is missing or window size is zero.
+// Prefers the pre-calculated used_percentage field from Claude Code when present.
+// Falls back to manual calculation from token counts when used_percentage is nil.
+// Returns -1 if context window data is missing or the manual path has zero window size.
 func (d Data) ContextPercent() int {
-	if d.contextWindow == nil || d.contextWindow.ContextWindowSize == 0 {
+	if d.contextWindow == nil {
+		return -1
+	}
+	if d.contextWindow.UsedPercentage != nil {
+		return int(math.Round(*d.contextWindow.UsedPercentage))
+	}
+	if d.contextWindow.ContextWindowSize == 0 {
 		return -1
 	}
 	u := d.contextWindow.CurrentUsage
