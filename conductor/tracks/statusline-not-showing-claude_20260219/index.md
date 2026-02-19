@@ -16,3 +16,4 @@ The conductor-powerline statusline renders blank in Claude Code despite `go run 
 - [Specification](spec.md)
 - [Plan](plan.md)
 - [Decisions](decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion
