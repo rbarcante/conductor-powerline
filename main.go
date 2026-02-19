@@ -112,6 +112,10 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, us
 		"model": func() segments.Segment {
 			return segments.Model(hookData.ModelID(), theme)
 		},
+		"conductor": func() segments.Segment {
+			detected := segments.DetectConductorPlugin("")
+			return segments.Conductor(detected, cfg.Display.NerdFontsEnabled(), theme)
+		},
 		"block": func() segments.Segment {
 			return segments.Block(usageData, theme)
 		},

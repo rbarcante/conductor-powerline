@@ -42,12 +42,12 @@ func Conductor(detected bool, nerdFonts bool, theme themes.Theme) Segment {
 	} else {
 		label = "Get Conductor"
 	}
-	text := osc8Link(conductorURL, label)
 	return Segment{
-		Name:    "conductor",
-		Text:    text,
-		FG:      colors.FG,
-		BG:      colors.BG,
-		Enabled: true,
+		Name:       "conductor",
+		Text:       osc8Link(conductorURL, label),
+		VisualText: label,
+		FG:         colors.FG,
+		BG:         colors.BG,
+		Enabled:    true,
 	}
 }
