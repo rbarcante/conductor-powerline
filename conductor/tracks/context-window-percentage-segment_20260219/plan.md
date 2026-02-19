@@ -2,10 +2,10 @@
 
 ## Phase 1: Hook Data — Context Window Parsing
 
-- [ ] Task: Add `ContextWindow` struct and fields to `hook.Data` for `context_window` JSON parsing
-- [ ] Task: Add `ContextPercent()` method to `hook.Data` that calculates the percentage
-- [ ] Task: Write tests for context window parsing — valid data, missing data, zero values, partial fields
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Add `ContextWindow` struct and fields to `hook.Data` for `context_window` JSON parsing [54b6c80]
+- [x] Task: Add `ContextPercent()` method to `hook.Data` that calculates the percentage [6763b7c]
+- [x] Task: Write tests for context window parsing — valid data, missing data, zero values, partial fields [6763b7c]
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Context Segment Provider
 
