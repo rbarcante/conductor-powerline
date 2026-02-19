@@ -19,3 +19,4 @@ The block (5-hour) and weekly (7-day) usage segments always display the `--` pla
 - [Specification](spec.md)
 - [Implementation Plan](plan.md)
 - [Decisions](decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion

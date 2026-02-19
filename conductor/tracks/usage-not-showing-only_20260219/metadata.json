@@ -1,10 +1,10 @@
 {
   "track_id": "usage-not-showing-only_20260219",
   "type": "bugfix",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "high",
   "created": "2026-02-19",
   "description": "Usage not showing — only fallback '--'. Block and weekly segments always display '--' instead of actual API usage data.",
   "branch": "fix/usage-not-shown",
-  "updated_at": "2026-02-19T16:45:42.261515Z"
+  "updated_at": "2026-02-19T17:27:17.633612Z"
 }
