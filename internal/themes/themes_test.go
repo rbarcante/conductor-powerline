@@ -18,7 +18,11 @@ func TestAllThemesDefined(t *testing.T) {
 }
 
 func TestThemeSegmentColors(t *testing.T) {
-	requiredSegments := []string{"directory", "git", "model", "block", "block-warning", "block-critical", "weekly", "context", "context-warning", "context-critical"}
+	requiredSegments := []string{
+		"directory", "git", "model",
+		"block", "weekly", "opus", "sonnet", "context",
+		"warning", "critical",
+	}
 
 	for _, name := range expectedThemes {
 		theme, ok := Get(name)
@@ -36,6 +40,18 @@ func TestThemeSegmentColors(t *testing.T) {
 			}
 			if colors.BG == "" {
 				t.Errorf("theme %q segment %q has empty BG color", name, seg)
+			}
+		}
+	}
+}
+
+func TestNoPerSegmentWarningCriticalKeys(t *testing.T) {
+	deprecated := []string{"block-warning", "block-critical", "context-warning", "context-critical"}
+	for _, name := range expectedThemes {
+		theme, _ := Get(name)
+		for _, key := range deprecated {
+			if _, ok := theme.Segments[key]; ok {
+				t.Errorf("theme %q still has deprecated key %q; use unified 'warning'/'critical' instead", name, key)
 			}
 		}
 	}

@@ -16,95 +16,96 @@ type Theme struct {
 }
 
 var registry = map[string]Theme{
-	// Colors ported from conductor-powerline hex values via hexToAnsi256 conversion
+	// Colors ported from conductor-powerline hex values via hexToAnsi256 conversion.
+	// Unified warning/critical keys replace per-segment variants.
 	"dark": {
 		Name: "dark",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "231", BG: "130"}, // #8b4513 / #ffffff
-			"git":            {FG: "231", BG: "237"}, // #404040 / #ffffff
-			"model":          {FG: "231", BG: "236"}, // #2d2d2d / #ffffff
-			"block":          {FG: "231", BG: "28"},  // green normal
-			"block-warning":  {FG: "231", BG: "208"}, // orange warning
-			"block-critical": {FG: "231", BG: "196"}, // red critical
-			"weekly":         {FG: "231", BG: "62"},  // purple
-			"context":          {FG: "231", BG: "36"},  // teal/green normal
-			"context-warning":  {FG: "231", BG: "178"}, // yellow/amber warning
-			"context-critical": {FG: "231", BG: "160"}, // red critical
+			"directory": {FG: "231", BG: "130"}, // #ffffff / #8b4513
+			"git":       {FG: "231", BG: "237"}, // #ffffff / #404040
+			"model":     {FG: "231", BG: "236"}, // #ffffff / #2d2d2d
+			"block":     {FG: "153", BG: "235"}, // #87ceeb / #2a2a2a
+			"weekly":    {FG: "157", BG: "234"}, // #98fb98 / #1a1a1a
+			"opus":      {FG: "183", BG: "234"}, // #c792ea / #1a1a1a
+			"sonnet":    {FG: "153", BG: "234"}, // #89ddff / #1a1a1a
+			"context":   {FG: "153", BG: "235"}, // #87ceeb / #2a2a2a
+			"warning":   {FG: "231", BG: "172"}, // #ffffff / #d75f00
+			"critical":  {FG: "231", BG: "124"}, // #ffffff / #af0000
 		},
 	},
 	"light": {
 		Name: "light",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "231", BG: "209"}, // #ff6b47 / #ffffff
-			"git":            {FG: "231", BG: "116"}, // #4fb3d9 / #ffffff
-			"model":          {FG: "16", BG: "153"},  // #87ceeb / #000000
-			"block":          {FG: "231", BG: "34"},  // green normal
-			"block-warning":  {FG: "231", BG: "214"}, // orange warning
-			"block-critical": {FG: "231", BG: "196"}, // red critical
-			"weekly":         {FG: "231", BG: "135"}, // purple
-			"context":          {FG: "231", BG: "37"},  // teal normal
-			"context-warning":  {FG: "231", BG: "214"}, // gold warning
-			"context-critical": {FG: "231", BG: "196"}, // red critical
+			"directory": {FG: "231", BG: "209"}, // #ffffff / #ff6b47
+			"git":       {FG: "231", BG: "116"}, // #ffffff / #4fb3d9
+			"model":     {FG: "16", BG: "153"},  // #000000 / #87ceeb
+			"block":     {FG: "231", BG: "105"}, // #ffffff / #6366f1
+			"weekly":    {FG: "231", BG: "43"},  // #ffffff / #10b981
+			"opus":      {FG: "231", BG: "141"}, // #ffffff / #8b5cf6
+			"sonnet":    {FG: "231", BG: "39"},  // #ffffff / #0ea5e9
+			"context":   {FG: "231", BG: "105"}, // #ffffff / #6366f1
+			"warning":   {FG: "16", BG: "214"},  // #000000 / #f59e0b
+			"critical":  {FG: "231", BG: "203"}, // #ffffff / #ef4444
 		},
 	},
 	"nord": {
 		Name: "nord",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "189", BG: "60"},  // #434c5e / #d8dee9
-			"git":            {FG: "151", BG: "60"},  // #3b4252 / #a3be8c
-			"model":          {FG: "146", BG: "66"},  // #4c566a / #81a1c1
-			"block":          {FG: "151", BG: "60"},  // green normal
-			"block-warning":  {FG: "223", BG: "172"}, // yellow warning
-			"block-critical": {FG: "231", BG: "131"}, // red critical
-			"weekly":         {FG: "146", BG: "60"},  // blue
-			"context":          {FG: "189", BG: "66"},  // frost teal normal
-			"context-warning":  {FG: "223", BG: "172"}, // aurora yellow warning
-			"context-critical": {FG: "231", BG: "131"}, // aurora red critical
+			"directory": {FG: "189", BG: "60"},  // #d8dee9 / #434c5e
+			"git":       {FG: "151", BG: "60"},  // #a3be8c / #3b4252
+			"model":     {FG: "146", BG: "66"},  // #81a1c1 / #4c566a
+			"block":     {FG: "146", BG: "60"},  // #81a1c1 / #3b4252
+			"weekly":    {FG: "152", BG: "59"},  // #8fbcbb / #2e3440
+			"opus":      {FG: "181", BG: "59"},  // #b48ead / #2e3440
+			"sonnet":    {FG: "152", BG: "59"},  // #88c0d0 / #2e3440
+			"context":   {FG: "146", BG: "60"},  // #81a1c1 / #3b4252
+			"warning":   {FG: "59", BG: "180"},  // #2e3440 / #d08770
+			"critical":  {FG: "231", BG: "174"}, // #eceff4 / #bf616a
 		},
 	},
 	"gruvbox": {
 		Name: "gruvbox",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "223", BG: "95"},  // #504945 / #ebdbb2
-			"git":            {FG: "185", BG: "59"},  // #3c3836 / #b8bb26
-			"model":          {FG: "145", BG: "102"}, // #665c54 / #83a598
-			"block":          {FG: "185", BG: "59"},  // green normal
-			"block-warning":  {FG: "223", BG: "172"}, // yellow warning
-			"block-critical": {FG: "223", BG: "124"}, // red critical
-			"weekly":         {FG: "145", BG: "102"}, // blue
-			"context":          {FG: "223", BG: "65"},  // aqua normal
-			"context-warning":  {FG: "223", BG: "172"}, // yellow warning
-			"context-critical": {FG: "223", BG: "124"}, // red critical
+			"directory": {FG: "223", BG: "95"},  // #ebdbb2 / #504945
+			"git":       {FG: "185", BG: "59"},  // #b8bb26 / #3c3836
+			"model":     {FG: "145", BG: "102"}, // #83a598 / #665c54
+			"block":     {FG: "145", BG: "59"},  // #83a598 / #3c3836
+			"weekly":    {FG: "221", BG: "235"}, // #fabd2f / #282828
+			"opus":      {FG: "181", BG: "235"}, // #d3869b / #282828
+			"sonnet":    {FG: "150", BG: "235"}, // #8ec07c / #282828
+			"context":   {FG: "145", BG: "59"},  // #83a598 / #3c3836
+			"warning":   {FG: "235", BG: "179"}, // #282828 / #d79921
+			"critical":  {FG: "223", BG: "167"}, // #ebdbb2 / #cc241d
 		},
 	},
 	"tokyo-night": {
 		Name: "tokyo-night",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "147", BG: "60"},  // #2f334d / #82aaff
-			"git":            {FG: "193", BG: "59"},  // #1e2030 / #c3e88d
-			"model":          {FG: "219", BG: "23"},  // #191b29 / #fca7ea
-			"block":          {FG: "193", BG: "59"},  // green normal
-			"block-warning":  {FG: "223", BG: "172"}, // orange warning
-			"block-critical": {FG: "231", BG: "197"}, // red critical
-			"weekly":         {FG: "147", BG: "60"},  // blue
-			"context":          {FG: "193", BG: "59"},  // green normal
-			"context-warning":  {FG: "223", BG: "172"}, // orange warning
-			"context-critical": {FG: "231", BG: "197"}, // red critical
+			"directory": {FG: "147", BG: "60"},  // #82aaff / #2f334d
+			"git":       {FG: "193", BG: "59"},  // #c3e88d / #1e2030
+			"model":     {FG: "219", BG: "23"},  // #fca7ea / #191b29
+			"block":     {FG: "111", BG: "59"},  // #7aa2f7 / #2d3748
+			"weekly":    {FG: "116", BG: "59"},  // #4fd6be / #1a202c
+			"opus":      {FG: "183", BG: "59"},  // #bb9af7 / #1a202c
+			"sonnet":    {FG: "117", BG: "59"},  // #7dcfff / #1a202c
+			"context":   {FG: "111", BG: "59"},  // #7aa2f7 / #2d3748
+			"warning":   {FG: "59", BG: "180"},  // #1a1b26 / #e0af68
+			"critical":  {FG: "59", BG: "211"},  // #1a1b26 / #f7768e
 		},
 	},
 	"rose-pine": {
 		Name: "rose-pine",
 		Segments: map[string]SegmentColors{
-			"directory":      {FG: "183", BG: "59"},  // #26233a / #c4a7e7
-			"git":            {FG: "152", BG: "59"},  // #1f1d2e / #9ccfd8
-			"model":          {FG: "224", BG: "17"},  // #191724 / #ebbcba
-			"block":          {FG: "152", BG: "59"},  // teal normal
-			"block-warning":  {FG: "223", BG: "172"}, // gold warning
-			"block-critical": {FG: "231", BG: "131"}, // love critical
-			"weekly":         {FG: "183", BG: "59"},  // iris
-			"context":          {FG: "152", BG: "59"},  // foam normal
-			"context-warning":  {FG: "223", BG: "172"}, // gold warning
-			"context-critical": {FG: "231", BG: "131"}, // love critical
+			"directory": {FG: "183", BG: "59"},  // #c4a7e7 / #26233a
+			"git":       {FG: "152", BG: "59"},  // #9ccfd8 / #1f1d2e
+			"model":     {FG: "224", BG: "17"},  // #ebbcba / #191724
+			"block":     {FG: "211", BG: "59"},  // #eb6f92 / #2a273f
+			"weekly":    {FG: "152", BG: "59"},  // #9ccfd8 / #232136
+			"opus":      {FG: "183", BG: "59"},  // #c4a7e7 / #232136
+			"sonnet":    {FG: "67", BG: "59"},   // #31748f / #232136
+			"context":   {FG: "152", BG: "59"},  // #9ccfd8 / #2a273f
+			"warning":   {FG: "17", BG: "222"},  // #191724 / #f6c177
+			"critical":  {FG: "17", BG: "211"},  // #191724 / #eb6f92
 		},
 	},
 }

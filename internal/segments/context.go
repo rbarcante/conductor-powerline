@@ -18,9 +18,9 @@ func Context(percent int, nerdFonts bool, theme themes.Theme) Segment {
 	var colorKey string
 	switch {
 	case percent > 80:
-		colorKey = "context-critical"
+		colorKey = "critical"
 	case percent >= 50:
-		colorKey = "context-warning"
+		colorKey = "warning"
 	default:
 		colorKey = "context"
 	}

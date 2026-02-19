@@ -71,7 +71,7 @@ func TestBlockColorThresholdWarning(t *testing.T) {
 	}
 
 	seg := Block(data, theme)
-	expectedColors := theme.Segments["block-warning"]
+	expectedColors := theme.Segments["warning"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("expected warning BG %q, got %q", expectedColors.BG, seg.BG)
 	}
@@ -86,7 +86,7 @@ func TestBlockColorThresholdCritical(t *testing.T) {
 	}
 
 	seg := Block(data, theme)
-	expectedColors := theme.Segments["block-critical"]
+	expectedColors := theme.Segments["critical"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("expected critical BG %q, got %q", expectedColors.BG, seg.BG)
 	}

@@ -34,7 +34,7 @@ func TestContextWarningRange(t *testing.T) {
 	if !seg.Enabled {
 		t.Error("expected segment enabled")
 	}
-	expectedColors := theme.Segments["context-warning"]
+	expectedColors := theme.Segments["warning"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (warning)", seg.BG, expectedColors.BG)
 	}
@@ -50,7 +50,7 @@ func TestContextCriticalRange(t *testing.T) {
 	if !seg.Enabled {
 		t.Error("expected segment enabled")
 	}
-	expectedColors := theme.Segments["context-critical"]
+	expectedColors := theme.Segments["critical"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (critical)", seg.BG, expectedColors.BG)
 	}
@@ -64,7 +64,7 @@ func TestContextBoundary50(t *testing.T) {
 
 	seg := Context(50, true, theme)
 	// 50% should be warning range
-	expectedColors := theme.Segments["context-warning"]
+	expectedColors := theme.Segments["warning"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (warning at 50%%)", seg.BG, expectedColors.BG)
 	}
@@ -78,7 +78,7 @@ func TestContextBoundary80(t *testing.T) {
 
 	seg := Context(80, true, theme)
 	// 80% should still be warning (> 80% is critical)
-	expectedColors := theme.Segments["context-warning"]
+	expectedColors := theme.Segments["warning"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (warning at 80%%)", seg.BG, expectedColors.BG)
 	}
@@ -89,7 +89,7 @@ func TestContextBoundary81(t *testing.T) {
 
 	seg := Context(81, true, theme)
 	// 81% should be critical
-	expectedColors := theme.Segments["context-critical"]
+	expectedColors := theme.Segments["critical"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (critical at 81%%)", seg.BG, expectedColors.BG)
 	}
@@ -114,7 +114,7 @@ func TestContext100Percent(t *testing.T) {
 	if !seg.Enabled {
 		t.Error("expected segment enabled at 100%")
 	}
-	expectedColors := theme.Segments["context-critical"]
+	expectedColors := theme.Segments["critical"]
 	if seg.BG != expectedColors.BG {
 		t.Errorf("BG = %q, want %q (critical at 100%%)", seg.BG, expectedColors.BG)
 	}
