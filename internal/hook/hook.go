@@ -16,8 +16,10 @@ type ContextWindowUsage struct {
 
 // ContextWindow holds context window data from Claude Code's hook JSON.
 type ContextWindow struct {
-	CurrentUsage      ContextWindowUsage `json:"current_usage"`
-	ContextWindowSize int                `json:"context_window_size"`
+	CurrentUsage        ContextWindowUsage `json:"current_usage"`
+	ContextWindowSize   int                `json:"context_window_size"`
+	UsedPercentage      *float64           `json:"used_percentage"`
+	RemainingPercentage *float64           `json:"remaining_percentage"`
 }
 
 // Data holds the parsed hook input from Claude Code.
