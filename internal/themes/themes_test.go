@@ -18,7 +18,7 @@ func TestAllThemesDefined(t *testing.T) {
 }
 
 func TestThemeSegmentColors(t *testing.T) {
-	requiredSegments := []string{"directory", "git", "model"}
+	requiredSegments := []string{"directory", "git", "model", "block", "block-warning", "block-critical", "weekly"}
 
 	for _, name := range expectedThemes {
 		theme, ok := Get(name)
