@@ -9,3 +9,7 @@
 ## Overview
 
 Update all theme color definitions in conductor-powerline to strictly match the colors defined in themes/index.ts. Restructure color model from per-segment warning/critical variants to unified warning/critical colors, add new opus/sonnet segment colors.
+
+## Documents
+
+- [Code Review Report](./review.md) - Auto-generated review on track completion
