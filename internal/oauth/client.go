@@ -31,18 +31,18 @@ func NewClient(baseURL string, timeout time.Duration) *Client {
 	}
 }
 
-// apiResponse mirrors the JSON structure from the Anthropic usage endpoint.
+// usageBucket represents a single usage bucket from the API response.
+type usageBucket struct {
+	ResetsAt    string  `json:"resets_at"`
+	Utilization float64 `json:"utilization"`
+}
+
+// apiResponse mirrors the JSON structure from the Anthropic OAuth usage endpoint.
 type apiResponse struct {
-	BlockUsage struct {
-		PercentUsed float64 `json:"percentUsed"`
-		ResetAt     string  `json:"resetAt"`
-	} `json:"blockUsage"`
-	WeeklyUsage struct {
-		PercentUsed   float64 `json:"percentUsed"`
-		OpusPercent   float64 `json:"opusPercent"`
-		SonnetPercent float64 `json:"sonnetPercent"`
-		ResetAt       string  `json:"resetAt"`
-	} `json:"weeklyUsage"`
+	FiveHour      *usageBucket `json:"five_hour"`
+	SevenDay      *usageBucket `json:"seven_day"`
+	SevenDayOpus  *usageBucket `json:"seven_day_opus"`
+	SevenDaySonnet *usageBucket `json:"seven_day_sonnet"`
 }
 
 // FetchUsageData calls the Anthropic usage endpoint and returns structured usage data.
@@ -53,6 +53,9 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "conductor-powerline/1.0.0")
+	req.Header.Set("anthropic-beta", "oauth-2025-04-20")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -79,16 +82,26 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		return nil, err
 	}
 
-	blockReset, _ := time.Parse(time.RFC3339, apiResp.BlockUsage.ResetAt)
-	weekReset, _ := time.Parse(time.RFC3339, apiResp.WeeklyUsage.ResetAt)
+	data := &UsageData{
+		FetchedAt: time.Now(),
+	}
 
-	return &UsageData{
-		BlockPercentage:  apiResp.BlockUsage.PercentUsed,
-		BlockResetTime:   blockReset,
-		WeeklyPercentage: apiResp.WeeklyUsage.PercentUsed,
-		OpusPercentage:   apiResp.WeeklyUsage.OpusPercent,
-		SonnetPercentage: apiResp.WeeklyUsage.SonnetPercent,
-		WeekResetTime:    weekReset,
-		FetchedAt:        time.Now(),
-	}, nil
+	if apiResp.FiveHour != nil {
+		data.BlockPercentage = apiResp.FiveHour.Utilization
+		data.BlockResetTime, _ = time.Parse(time.RFC3339, apiResp.FiveHour.ResetsAt)
+	}
+
+	if apiResp.SevenDay != nil {
+		data.WeeklyPercentage = apiResp.SevenDay.Utilization
+		data.WeekResetTime, _ = time.Parse(time.RFC3339, apiResp.SevenDay.ResetsAt)
+	}
+
+	if apiResp.SevenDayOpus != nil {
+		data.OpusPercentage = apiResp.SevenDayOpus.Utilization
+	}
+	if apiResp.SevenDaySonnet != nil {
+		data.SonnetPercentage = apiResp.SevenDaySonnet.Utilization
+	}
+
+	return data, nil
 }
