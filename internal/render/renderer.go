@@ -67,7 +67,7 @@ func filterEnabled(segs []segments.Segment) []segments.Segment {
 func shouldCompact(segs []segments.Segment, termWidth int) bool {
 	totalLen := 0
 	for _, s := range segs {
-		totalLen += len(s.Text) + 3 // text + padding + separator
+		totalLen += len([]rune(s.Text)) + 3 // text + padding + separator
 	}
 	return totalLen > termWidth
 }
