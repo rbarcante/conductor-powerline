@@ -18,7 +18,7 @@
   - OSC 8 format: `\033]8;;URL\033\\TEXT\033]8;;\033\\`
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: Plugin Detection Logic
+## Phase 2: Plugin Detection Logic [checkpoint: d886370]
 
 - [x] Task: Write failing tests for plugin detection in `internal/segments/conductor_detect_test.go` [ab95d79]
   - Test: returns true when `~/.claude/plugins/claude-conductor/` directory exists
@@ -35,14 +35,14 @@
 
 ## Phase 3: Integration with Main Pipeline
 
-- [ ] Task: Add `"conductor"` to default config in `internal/config/config.go`
+- [~] Task: Add `"conductor"` to default config in `internal/config/config.go`
   - Add `"conductor": {Enabled: true}` to `DefaultConfig().Segments`
   - Insert `"conductor"` into `SegmentOrder` after `"model"` and before `"block"`
-- [ ] Task: Write failing test for conductor segment integration in main builder
-- [ ] Task: Wire `conductor` segment into `buildSegments()` in `main.go`
+- [x] Task: Write failing test for conductor segment integration in main builder [9722c3a]
+- [x] Task: Wire `conductor` segment into `buildSegments()` in `main.go` [60397e1]
   - Add `"conductor"` case to the `builders` map
   - Call `DetectConductorPlugin()` and pass result to `Conductor()` segment
   - Pass `cfg.Display.NerdFontsEnabled()` for icon selection
-- [ ] Task: Update existing config tests to reflect new default segment
-- [ ] Task: Run full test suite and verify > 80% coverage
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Update existing config tests to reflect new default segment [314cdc7]
+- [x] Task: Run full test suite and verify > 80% coverage [314cdc7]
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
