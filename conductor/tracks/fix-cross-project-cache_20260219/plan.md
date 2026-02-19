@@ -25,7 +25,7 @@
   - TDD: Test cleanup removes old files, keeps recent ones
 - [x] Task 2.3: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Integration — Replace In-Memory Cache with File Cache `[status: complete]`
+## Phase 3: Integration — Replace In-Memory Cache with File Cache `[status: complete]` [checkpoint: 69db731]
 
 - [x] Task 3.1: Update `oauth.FetchUsage()` to use `FileCache` [4071462]
   - Replace `Cache` parameter with `FileCache` (or introduce interface)

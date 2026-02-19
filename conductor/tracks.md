@@ -24,7 +24,7 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
-- [ ] **Track: Fix cross-project cache contamination**
+- [x] **Track: Fix cross-project cache contamination**
   *Link: [fix-cross-project-cache_20260219](./conductor/tracks/fix-cross-project-cache_20260219/)*
 - [x] **Track: Use context_window.used_percentage from Claude Code statusline JSON**
   *Link: [use-context-window-used_20260219](./conductor/tracks/use-context-window-used_20260219/)*

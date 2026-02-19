@@ -1,8 +1,9 @@
 {
   "id": "fix-cross-project-cache_20260219",
   "type": "bugfix",
-  "status": "planned",
+  "status": "completed",
   "branch": "bugfix/cache-cross-project-fix",
   "created": "2026-02-19",
-  "description": "Fix cross-project cache contamination"
+  "description": "Fix cross-project cache contamination",
+  "updated_at": "2026-02-19T20:44:34.533487Z"
 }
