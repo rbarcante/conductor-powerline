@@ -14,7 +14,7 @@
 - [x] Task: Create `internal/oauth/credfile.go` — read token from `~/.claude/.credentials.json` [ccf22d9]
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: API Client & Caching
+## Phase 2: API Client & Caching [checkpoint: b956569]
 
 - [x] Task: Create `internal/oauth/client_test.go` — tests for API client (successful response parsing, timeout, HTTP errors, malformed JSON) [54d301b]
 - [x] Task: Create `internal/oauth/client.go` — HTTP client to call Anthropic usage endpoint, parse response into structured usage data [54d301b]
@@ -26,13 +26,13 @@
 
 ## Phase 3: Usage Segments & Trends
 
-- [ ] Task: Create `internal/segments/block_test.go` — tests for 5-hour block segment (percentage display, countdown format, color thresholds, nil data shows `--`)
-- [ ] Task: Create `internal/segments/block.go` — 5-hour block usage segment with percentage, countdown, and theme-aware color intensity
-- [ ] Task: Create `internal/segments/weekly_test.go` — tests for 7-day rolling segment (percentage, Opus/Sonnet breakdown, week progress, nil data)
-- [ ] Task: Create `internal/segments/weekly.go` — 7-day rolling usage segment with smart mode breakdown
-- [ ] Task: Create `internal/segments/trend_test.go` — tests for trend indicator (increasing, decreasing, stable within ±2%, no previous data)
-- [ ] Task: Create `internal/segments/trend.go` — trend arrow logic comparing current vs previous usage values
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Create `internal/segments/block_test.go` — tests for 5-hour block segment (percentage display, countdown format, color thresholds, nil data shows `--`) [4e1d1da]
+- [x] Task: Create `internal/segments/block.go` — 5-hour block usage segment with percentage, countdown, and theme-aware color intensity [4e1d1da]
+- [x] Task: Create `internal/segments/weekly_test.go` — tests for 7-day rolling segment (percentage, Opus/Sonnet breakdown, week progress, nil data) [4e1d1da]
+- [x] Task: Create `internal/segments/weekly.go` — 7-day rolling usage segment with smart mode breakdown [4e1d1da]
+- [x] Task: Create `internal/segments/trend_test.go` — tests for trend indicator (increasing, decreasing, stable within ±2%, no previous data) [4e1d1da]
+- [x] Task: Create `internal/segments/trend.go` — trend arrow logic comparing current vs previous usage values [4e1d1da]
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
 ## Phase 4: Integration & Config Update
 
