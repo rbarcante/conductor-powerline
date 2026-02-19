@@ -21,7 +21,7 @@
 - [x] Task: Write/update theme tests to verify new entries exist [f93ec02]
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
-## Phase 4: Right-Side Rendering
+## Phase 4: Right-Side Rendering [checkpoint: 0e49ab1]
 
 - [x] Task: Add `RenderRight()` function to `internal/render/renderer.go` using left-pointing arrow separators [0f5b978]
 - [x] Task: Add left arrow symbol to `symbols.go` [0f5b978]
@@ -30,8 +30,8 @@
 
 ## Phase 5: Integration — Main & Config
 
-- [ ] Task: Add `"context"` to default segment order in config defaults
-- [ ] Task: Wire context segment in `main.go` `buildSegments()` — build separately, render on right side
-- [ ] Task: Update `run()` to call `RenderRight()` after left-side `Render()` and concatenate output
-- [ ] Task: Write integration-level test verifying end-to-end context segment output
-- [ ] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)
+- [x] Task: Add `"context"` to default segment order in config defaults [8136830]
+- [x] Task: Wire context segment in `main.go` `buildSegments()` — build separately, render on right side [8136830]
+- [x] Task: Update `run()` to call `RenderRight()` after left-side `Render()` and concatenate output [8136830]
+- [x] Task: Write integration-level test verifying end-to-end context segment output [8136830]
+- [x] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)
