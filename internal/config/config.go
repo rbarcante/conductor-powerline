@@ -23,7 +23,7 @@ func DefaultConfig() Config {
 			"weekly":    {Enabled: true},
 			"context":   {Enabled: true},
 		},
-		SegmentOrder:   []string{"directory", "git", "model", "block", "weekly", "conductor", "context"},
+		SegmentOrder:   []string{"directory", "git", "model", "block", "weekly", "context", "conductor"},
 		APITimeout:     Duration{5 * time.Second},
 		CacheTTL:       Duration{30 * time.Second},
 		TrendThreshold: 2.0,
