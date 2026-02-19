@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/rbarcante/conductor-powerline/internal/debug"
 )
 
 // usageFetcher defines the interface for fetching usage data.
@@ -45,6 +47,7 @@ type apiResponse struct {
 
 // FetchUsageData calls the Anthropic usage endpoint and returns structured usage data.
 func (c *Client) FetchUsageData(token string) (*UsageData, error) {
+	debug.Logf("api", "GET %s", c.baseURL)
 	req, err := http.NewRequest("GET", c.baseURL, nil)
 	if err != nil {
 		return nil, err
@@ -53,9 +56,12 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		debug.Logf("api", "HTTP error: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	debug.Logf("api", "HTTP status: %d", resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("oauth: API returned status %d", resp.StatusCode)
@@ -65,9 +71,11 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 	if err != nil {
 		return nil, err
 	}
+	debug.Logf("api", "response body length: %d bytes", len(body))
 
 	var apiResp apiResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
+		debug.Logf("api", "JSON parse error: %v", err)
 		return nil, err
 	}
 
