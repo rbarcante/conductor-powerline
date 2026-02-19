@@ -106,7 +106,7 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, us
 			return segments.Directory(hookData.WorkspacePath(), theme)
 		},
 		"git": func() segments.Segment {
-			return segments.Git(theme)
+			return segments.Git(hookData.WorkspacePath(), theme)
 		},
 		"model": func() segments.Segment {
 			return segments.Model(hookData.ModelID(), theme)
