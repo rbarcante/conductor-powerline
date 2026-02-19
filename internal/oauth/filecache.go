@@ -55,6 +55,31 @@ func (fc *FileCache) Store(key string, data *UsageData) {
 	if err := os.WriteFile(path, b, 0o600); err != nil {
 		debug.Logf("filecache", "write error: %v", err)
 	}
+
+	fc.cleanup()
+}
+
+// cleanupMaxAge is the maximum age for cache files before they are removed.
+const cleanupMaxAge = 7 * 24 * time.Hour
+
+// cleanup removes cache files not modified in the last 7 days.
+func (fc *FileCache) cleanup() {
+	entries, err := os.ReadDir(fc.dir)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		if time.Since(info.ModTime()) > cleanupMaxAge {
+			os.Remove(filepath.Join(fc.dir, e.Name()))
+		}
+	}
 }
 
 // Get reads cached usage data for the given key. Returns nil if the file

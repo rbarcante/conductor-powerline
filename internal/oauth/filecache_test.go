@@ -150,6 +150,57 @@ func TestFileCacheHashedFilename(t *testing.T) {
 	}
 }
 
+func TestFileCacheCleanupRemovesOldFiles(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+
+	// Store 3 entries
+	fc.Store("old-project-1", data)
+	fc.Store("old-project-2", data)
+	fc.Store("recent-project", data)
+
+	// Backdate the first two files by 8 days
+	entries, _ := os.ReadDir(dir)
+	oldTime := time.Now().Add(-8 * 24 * time.Hour)
+	for i, e := range entries {
+		if i < 2 {
+			path := filepath.Join(dir, e.Name())
+			os.Chtimes(path, oldTime, oldTime)
+		}
+	}
+
+	// Trigger cleanup via Store
+	fc.Store("trigger-cleanup", data)
+
+	// Should have 2 files left: recent-project + trigger-cleanup
+	entries, _ = os.ReadDir(dir)
+	if len(entries) != 2 {
+		t.Errorf("expected 2 files after cleanup, got %d", len(entries))
+	}
+}
+
+func TestFileCacheCleanupKeepsRecentFiles(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+
+	// Store 3 entries — all recent
+	fc.Store("project-1", data)
+	fc.Store("project-2", data)
+	fc.Store("project-3", data)
+
+	// Trigger cleanup
+	fc.Store("project-4", data)
+
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 4 {
+		t.Errorf("expected 4 files (all recent), got %d", len(entries))
+	}
+}
+
 func TestFileCachePersistsAcrossInstances(t *testing.T) {
 	dir := t.TempDir()
 
