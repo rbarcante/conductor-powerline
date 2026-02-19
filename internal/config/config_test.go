@@ -19,7 +19,7 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Display.CompactWidth != 80 {
 		t.Errorf("expected default CompactWidth 80, got %d", cfg.Display.CompactWidth)
 	}
-	expectedOrder := []string{"directory", "git", "model", "block", "weekly"}
+	expectedOrder := []string{"directory", "git", "model", "block", "weekly", "context"}
 	if len(cfg.SegmentOrder) != len(expectedOrder) {
 		t.Fatalf("expected %d segment order items, got %d", len(expectedOrder), len(cfg.SegmentOrder))
 	}
@@ -172,8 +172,8 @@ func TestMergeConfigPartialOverride(t *testing.T) {
 		t.Errorf("expected CompactWidth 80 from base, got %d", merged.Display.CompactWidth)
 	}
 	// Segment order should stay default
-	if len(merged.SegmentOrder) != 5 {
-		t.Errorf("expected 5 segment order items from base, got %d", len(merged.SegmentOrder))
+	if len(merged.SegmentOrder) != 6 {
+		t.Errorf("expected 6 segment order items from base, got %d", len(merged.SegmentOrder))
 	}
 }
 
@@ -258,7 +258,7 @@ func TestLoadNoFiles(t *testing.T) {
 	if cfg.Theme != "dark" {
 		t.Errorf("expected default theme 'dark', got %q", cfg.Theme)
 	}
-	if len(cfg.SegmentOrder) != 5 {
-		t.Errorf("expected 5 default segments, got %d", len(cfg.SegmentOrder))
+	if len(cfg.SegmentOrder) != 6 {
+		t.Errorf("expected 6 default segments, got %d", len(cfg.SegmentOrder))
 	}
 }
