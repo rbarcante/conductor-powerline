@@ -8,7 +8,7 @@
 - [x] Task: Create `internal/config/config.go` — implement config loading with defaults, file discovery, deep merge [fc5dc75]
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: Stdin & Theme System
+## Phase 2: Stdin & Theme System [checkpoint: 0254ffd]
 
 - [x] Task: Create `internal/hook/hook_test.go` — tests for stdin JSON parsing (valid, empty, malformed, missing fields) [e5ec24e]
 - [x] Task: Create `internal/hook/hook.go` — parse stdin hook data, extract model/workspace/context [e5ec24e]
@@ -18,14 +18,14 @@
 
 ## Phase 3: Segments
 
-- [ ] Task: Create `internal/segments/types.go` — define Segment struct (Name, Text, FG, BG, Enabled)
-- [ ] Task: Create `internal/segments/directory_test.go` — tests for directory name extraction from paths
-- [ ] Task: Create `internal/segments/directory.go` — extract repo/dir name from workspace path or cwd
-- [ ] Task: Create `internal/segments/git_test.go` — tests for branch detection, dirty state, git unavailable
-- [ ] Task: Create `internal/segments/git.go` — run git commands for branch and dirty state
-- [ ] Task: Create `internal/segments/model_test.go` — tests for model ID to friendly name mapping
-- [ ] Task: Create `internal/segments/model.go` — map model identifiers to display names
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Create `internal/segments/types.go` — define Segment struct (Name, Text, FG, BG, Enabled) [cf6b40c]
+- [x] Task: Create `internal/segments/directory_test.go` — tests for directory name extraction from paths [2571adb]
+- [x] Task: Create `internal/segments/directory.go` — extract repo/dir name from workspace path or cwd [2571adb]
+- [x] Task: Create `internal/segments/git_test.go` — tests for branch detection, dirty state, git unavailable [05a7468]
+- [x] Task: Create `internal/segments/git.go` — run git commands for branch and dirty state [05a7468]
+- [x] Task: Create `internal/segments/model_test.go` — tests for model ID to friendly name mapping [f53f2fb]
+- [x] Task: Create `internal/segments/model.go` — map model identifiers to display names [f53f2fb]
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
 ## Phase 4: Renderer & Integration
 
