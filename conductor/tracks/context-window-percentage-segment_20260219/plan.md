@@ -28,7 +28,7 @@
 - [x] Task: Write tests — single right segment, empty input, nerd font vs text fallback [0f5b978]
 - [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
 
-## Phase 5: Integration — Main & Config
+## Phase 5: Integration — Main & Config [checkpoint: 443f4ab]
 
 - [x] Task: Add `"context"` to default segment order in config defaults [8136830]
 - [x] Task: Wire context segment in `main.go` `buildSegments()` — build separately, render on right side [8136830]

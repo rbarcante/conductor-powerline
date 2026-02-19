@@ -14,3 +14,4 @@ Add a context window percentage segment to the powerline, displayed on the right
 - [Specification](./spec.md)
 - [Plan](./plan.md)
 - [Decisions](./decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion
