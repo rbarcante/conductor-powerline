@@ -1,6 +1,6 @@
 # Plan: Detect Conductor Plugin and Suggest Installation
 
-## Phase 1: Conductor Segment Core
+## Phase 1: Conductor Segment Core [checkpoint: 96bdef8]
 
 - [x] Task: Add `conductor` theme colors to all 6 themes in `internal/themes/themes.go` [0291656]
   - Add `"conductor"` and `"conductor_missing"` segment color entries to each theme
@@ -20,18 +20,18 @@
 
 ## Phase 2: Plugin Detection Logic
 
-- [ ] Task: Write failing tests for plugin detection in `internal/segments/conductor_detect_test.go`
+- [x] Task: Write failing tests for plugin detection in `internal/segments/conductor_detect_test.go` [ab95d79]
   - Test: returns true when `~/.claude/plugins/claude-conductor/` directory exists
   - Test: returns true when `~/.claude/marketplace/claude-conductor/` directory exists (or equivalent)
   - Test: returns false when neither directory exists
   - Test: works cross-platform via `os.UserHomeDir()`
   - Use a test helper that creates/removes temp directories to simulate `~/.claude/`
-- [ ] Task: Implement `DetectConductorPlugin()` function in `internal/segments/conductor_detect.go`
+- [x] Task: Implement `DetectConductorPlugin()` function in `internal/segments/conductor_detect.go` [72468cc]
   - Check `~/.claude/plugins/` for directories matching `claude-conductor`
   - Check `~/.claude/marketplace/` for directories matching `claude-conductor`
   - Return `bool` — true if found in either location
   - Accept an optional base dir parameter for testability (dependency injection)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Integration with Main Pipeline
 
