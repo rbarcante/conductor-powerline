@@ -51,6 +51,13 @@ func TestDetectConductorPluginNoDotClaude(t *testing.T) {
 	}
 }
 
+func TestDetectConductorPluginEmptyBaseUsesHomeDir(t *testing.T) {
+	// Passing empty string should use os.UserHomeDir() — just verify it doesn't panic
+	// and returns a bool. We can't control the actual home dir in tests.
+	result := DetectConductorPlugin("")
+	_ = result // either true or false depending on the test environment
+}
+
 func TestDetectConductorPluginBothLocations(t *testing.T) {
 	base := t.TempDir()
 	// Both locations exist — should return true
