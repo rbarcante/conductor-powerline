@@ -2,21 +2,21 @@
 
 ## Phase 1: Conductor Segment Core
 
-- [ ] Task: Add `conductor` theme colors to all 6 themes in `internal/themes/themes.go`
+- [x] Task: Add `conductor` theme colors to all 6 themes in `internal/themes/themes.go` [0291656]
   - Add `"conductor"` and `"conductor_missing"` segment color entries to each theme
   - `conductor`: green/success tones matching theme aesthetic
   - `conductor_missing`: yellow/warning tones matching theme aesthetic
-- [ ] Task: Write failing tests for `Conductor()` segment function in `internal/segments/conductor_test.go`
+- [x] Task: Write failing tests for `Conductor()` segment function in `internal/segments/conductor_test.go` [4df089f]
   - Test: returns enabled segment with `✓ Conductor` text when plugin detected
   - Test: returns enabled segment with `⚡ Get Conductor` text + OSC 8 hyperlink when plugin not detected
   - Test: uses correct theme colors for installed vs missing states
   - Test: Nerd Font vs text fallback for icons
-- [ ] Task: Implement `Conductor()` segment function in `internal/segments/conductor.go`
+- [x] Task: Implement `Conductor()` segment function in `internal/segments/conductor.go` [adbd990]
   - Accept a `detected bool`, `nerdFonts bool`, and `theme themes.Theme` parameter
   - When detected: render `✓ Conductor` with `conductor` theme colors
   - When not detected: render `⚡ Get Conductor` wrapped in OSC 8 hyperlink (`https://github.com/rbarcante/claude-conductor`) with `conductor_missing` colors
   - OSC 8 format: `\033]8;;URL\033\\TEXT\033]8;;\033\\`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Plugin Detection Logic
 
