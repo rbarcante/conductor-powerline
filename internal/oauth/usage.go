@@ -10,10 +10,17 @@ import (
 // It is a package-level variable to allow testing with mocks.
 var tokenGetter = GetToken
 
+// UsageCache defines the interface for caching usage data.
+// Both the in-memory Cache and file-based FileCache satisfy this interface.
+type UsageCache interface {
+	Store(key string, data *UsageData)
+	Get(key string) *UsageData
+}
+
 // FetchUsage orchestrates usage data retrieval: gets token, calls API,
-// caches on success, serves stale on failure. Returns nil with error
-// on first-run failure (no cache available).
-func FetchUsage(fetcher UsageFetcher, cache *Cache) (*UsageData, error) {
+// caches on success (keyed by workspace), serves stale on failure.
+// Returns nil with error on first-run failure (no cache available).
+func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string) (*UsageData, error) {
 	debug.Logf("usage", "fetching token...")
 	token, err := tokenGetter()
 	if err != nil {
@@ -24,14 +31,14 @@ func FetchUsage(fetcher UsageFetcher, cache *Cache) (*UsageData, error) {
 	data, err := fetcher.FetchUsageData(token)
 	if err == nil {
 		data.IsStale = false
-		cache.Store(data)
+		cache.Store(workspaceKey, data)
 		debug.Logf("usage", "API success: block=%.1f%% weekly=%.1f%%", data.BlockPercentage, data.WeeklyPercentage)
 		return data, nil
 	}
 	debug.Logf("usage", "API call failed: %v", err)
 
 	// API failed — try serving cached data
-	cached := cache.Get()
+	cached := cache.Get(workspaceKey)
 	if cached != nil {
 		cached.IsStale = true
 		debug.Logf("usage", "serving stale cached data (block=%.1f%% weekly=%.1f%%)", cached.BlockPercentage, cached.WeeklyPercentage)

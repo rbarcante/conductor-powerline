@@ -13,9 +13,9 @@ func TestCacheStoreAndRetrieve(t *testing.T) {
 		WeeklyPercentage: 30.0,
 		FetchedAt:        time.Now(),
 	}
-	c.Store(data)
+	c.Store("any-key", data)
 
-	got := c.Get()
+	got := c.Get("any-key")
 	if got == nil {
 		t.Fatal("expected cached data, got nil")
 	}
@@ -34,10 +34,10 @@ func TestCacheTTLExpiry(t *testing.T) {
 		BlockPercentage: 50.0,
 		FetchedAt:       time.Now(),
 	}
-	c.Store(data)
+	c.Store("key", data)
 
 	// Data should be fresh initially
-	got := c.Get()
+	got := c.Get("key")
 	if got == nil || got.IsStale {
 		t.Error("expected fresh data immediately after store")
 	}
@@ -45,7 +45,7 @@ func TestCacheTTLExpiry(t *testing.T) {
 	// Wait for TTL to expire
 	time.Sleep(60 * time.Millisecond)
 
-	got = c.Get()
+	got = c.Get("key")
 	if got == nil {
 		t.Fatal("expected stale data, got nil")
 	}
@@ -57,7 +57,7 @@ func TestCacheTTLExpiry(t *testing.T) {
 func TestCacheEmptyReturnsNil(t *testing.T) {
 	c := NewCache(1 * time.Minute)
 
-	got := c.Get()
+	got := c.Get("key")
 	if got != nil {
 		t.Errorf("expected nil from empty cache, got %+v", got)
 	}
@@ -70,11 +70,11 @@ func TestCacheStaleIndicator(t *testing.T) {
 		BlockPercentage: 75.0,
 		FetchedAt:       time.Now(),
 	}
-	c.Store(data)
+	c.Store("key", data)
 
 	time.Sleep(20 * time.Millisecond)
 
-	got := c.Get()
+	got := c.Get("key")
 	if got == nil {
 		t.Fatal("expected stale data, got nil")
 	}
@@ -84,4 +84,9 @@ func TestCacheStaleIndicator(t *testing.T) {
 	if got.BlockPercentage != 75.0 {
 		t.Errorf("expected original data preserved, got %f", got.BlockPercentage)
 	}
+}
+
+// TestCacheSatisfiesUsageCacheInterface verifies that Cache satisfies UsageCache.
+func TestCacheSatisfiesUsageCacheInterface(t *testing.T) {
+	var _ UsageCache = NewCache(1 * time.Minute)
 }

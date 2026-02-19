@@ -61,8 +61,9 @@ func run() error {
 	go func() {
 		defer wg.Done()
 		client := oauth.NewClient(anthropicUsageURL, cfg.APITimeout.Duration)
-		cache := oauth.NewCache(cfg.CacheTTL.Duration)
-		data, err := oauth.FetchUsage(client, cache)
+		cache := oauth.NewFileCache(cacheDir(), cfg.CacheTTL.Duration)
+		workspace := hookData.WorkspacePath()
+		data, err := oauth.FetchUsage(client, cache, workspace)
 		if err == nil {
 			usageData = data
 		} else {
@@ -135,6 +136,18 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, us
 		result = append(result, builder())
 	}
 	return result
+}
+
+// cacheDir returns the cache directory for conductor-powerline.
+// Uses $XDG_CACHE_HOME/conductor-powerline if set, otherwise ~/.cache/conductor-powerline.
+func cacheDir() string {
+	if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
+		return filepath.Join(xdg, "conductor-powerline")
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".cache", "conductor-powerline")
+	}
+	return filepath.Join(os.TempDir(), "conductor-powerline")
 }
 
 func buildRightSegments(cfg config.Config, hookData hook.Data, theme themes.Theme) []segments.Segment {
