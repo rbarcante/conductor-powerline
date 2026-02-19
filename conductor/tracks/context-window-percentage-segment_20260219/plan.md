@@ -15,7 +15,7 @@
 - [x] Task: Write tests — all threshold boundaries, zero percent, 100%, missing data, nerd font vs text mode [ecc6819]
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Theme Updates
+## Phase 3: Theme Updates [checkpoint: 6dd604b]
 
 - [x] Task: Add `context`, `context-warning`, `context-critical` color entries to all 6 themes [f93ec02]
 - [x] Task: Write/update theme tests to verify new entries exist [f93ec02]
@@ -23,10 +23,10 @@
 
 ## Phase 4: Right-Side Rendering
 
-- [ ] Task: Add `RenderRight()` function to `internal/render/renderer.go` using left-pointing arrow separators
-- [ ] Task: Add left arrow symbol to `symbols.go`
-- [ ] Task: Write tests — single right segment, empty input, nerd font vs text fallback
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+- [x] Task: Add `RenderRight()` function to `internal/render/renderer.go` using left-pointing arrow separators [0f5b978]
+- [x] Task: Add left arrow symbol to `symbols.go` [0f5b978]
+- [x] Task: Write tests — single right segment, empty input, nerd font vs text fallback [0f5b978]
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
 
 ## Phase 5: Integration — Main & Config
 
