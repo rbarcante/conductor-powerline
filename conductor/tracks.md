@@ -20,6 +20,9 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 ## Active Tracks
 
 
+
+- [x] **Track: Context window percentage segment at end of powerline**
+  *Link: [context-window-percentage-segment_20260219](./conductor/tracks/context-window-percentage-segment_20260219/)*
 - [x] **Track: Usage not showing — only fallback '--'. Block and weekly segments always display '--' instead of actual API usage data.**
   *Link: [usage-not-showing-only_20260219](./conductor/tracks/usage-not-showing-only_20260219/)*
 - [x] **Track: Statusline not showing on Claude Code**

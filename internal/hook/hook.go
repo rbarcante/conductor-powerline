@@ -4,7 +4,21 @@ package hook
 import (
 	"encoding/json"
 	"io"
+	"math"
 )
+
+// ContextWindowUsage holds token usage counts from the context window.
+type ContextWindowUsage struct {
+	InputTokens                int `json:"input_tokens"`
+	CacheCreationInputTokens   int `json:"cache_creation_input_tokens"`
+	CacheReadInputTokens       int `json:"cache_read_input_tokens"`
+}
+
+// ContextWindow holds context window data from Claude Code's hook JSON.
+type ContextWindow struct {
+	CurrentUsage      ContextWindowUsage `json:"current_usage"`
+	ContextWindowSize int                `json:"context_window_size"`
+}
 
 // Data holds the parsed hook input from Claude Code.
 // Supports both legacy string format and Claude Code's object format
@@ -13,6 +27,7 @@ type Data struct {
 	modelID          string
 	modelDisplayName string
 	workspacePath    string
+	contextWindow    *ContextWindow
 
 	Context json.RawMessage `json:"context"`
 }
@@ -33,9 +48,10 @@ type workspaceObject struct {
 // forms for model and workspace fields. Values are resolved eagerly.
 func (d *Data) UnmarshalJSON(data []byte) error {
 	type alias struct {
-		Model     json.RawMessage `json:"model"`
-		Workspace json.RawMessage `json:"workspace"`
-		Context   json.RawMessage `json:"context"`
+		Model         json.RawMessage `json:"model"`
+		Workspace     json.RawMessage `json:"workspace"`
+		Context       json.RawMessage `json:"context"`
+		ContextWindow json.RawMessage `json:"context_window"`
 	}
 
 	var a alias
@@ -46,6 +62,7 @@ func (d *Data) UnmarshalJSON(data []byte) error {
 	d.Context = a.Context
 	d.modelID, d.modelDisplayName = resolveModel(a.Model)
 	d.workspacePath = resolveWorkspace(a.Workspace)
+	d.contextWindow = resolveContextWindow(a.ContextWindow)
 	return nil
 }
 
@@ -80,6 +97,34 @@ func resolveWorkspace(raw json.RawMessage) string {
 		return obj.CurrentDir
 	}
 	return ""
+}
+
+func resolveContextWindow(raw json.RawMessage) *ContextWindow {
+	if len(raw) == 0 {
+		return nil
+	}
+	var cw ContextWindow
+	if err := json.Unmarshal(raw, &cw); err != nil {
+		return nil
+	}
+	return &cw
+}
+
+// ContextWindow returns the parsed context window data, or nil if absent.
+func (d Data) ContextWindow() *ContextWindow {
+	return d.contextWindow
+}
+
+// ContextPercent returns the context window usage as a rounded percentage (0-100).
+// Returns -1 if context window data is missing or window size is zero.
+func (d Data) ContextPercent() int {
+	if d.contextWindow == nil || d.contextWindow.ContextWindowSize == 0 {
+		return -1
+	}
+	u := d.contextWindow.CurrentUsage
+	total := float64(u.InputTokens + u.CacheCreationInputTokens + u.CacheReadInputTokens)
+	pct := total / float64(d.contextWindow.ContextWindowSize) * 100
+	return int(math.Round(pct))
 }
 
 // ModelID returns the model identifier.

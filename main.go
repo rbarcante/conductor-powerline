@@ -81,11 +81,21 @@ func run() error {
 	segs := buildSegments(cfg, hookData, theme, usageData)
 	debug.Logf("main", "built %d segments", len(segs))
 
-	// 6. Render and output (no trailing newline)
+	// 6. Build right-side segments (context window)
+	rightSegs := buildRightSegments(cfg, hookData, theme)
+	debug.Logf("main", "built %d right segments", len(rightSegs))
+
+	// 7. Render and output (no trailing newline)
 	output := render.Render(segs, cfg.Display.NerdFonts, cfg.Display.CompactWidth)
-	fmt.Print(output)
+	rightOutput := render.RenderRight(rightSegs, cfg.Display.NerdFonts)
+	fmt.Print(output + rightOutput)
 
 	return nil
+}
+
+// rightSideSegments lists segment names that render on the right side.
+var rightSideSegments = map[string]bool{
+	"context": true,
 }
 
 func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, usageData *oauth.UsageData) []segments.Segment {
@@ -109,6 +119,9 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, us
 
 	var result []segments.Segment
 	for _, name := range cfg.SegmentOrder {
+		if rightSideSegments[name] {
+			continue // Right-side segments rendered separately
+		}
 		segCfg, hasCfg := cfg.Segments[name]
 		if hasCfg && !segCfg.Enabled {
 			continue
@@ -120,4 +133,17 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, us
 		result = append(result, builder())
 	}
 	return result
+}
+
+func buildRightSegments(cfg config.Config, hookData hook.Data, theme themes.Theme) []segments.Segment {
+	segCfg, hasCfg := cfg.Segments["context"]
+	if hasCfg && !segCfg.Enabled {
+		return nil
+	}
+
+	seg := segments.Context(hookData.ContextPercent(), cfg.Display.NerdFonts, theme)
+	if !seg.Enabled {
+		return nil
+	}
+	return []segments.Segment{seg}
 }

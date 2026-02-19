@@ -54,6 +54,46 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 	return b.String()
 }
 
+// RenderRight produces an ANSI-colored powerline string for right-side segments
+// using left-pointing arrow separators. No compact mode for right segments.
+func RenderRight(segs []segments.Segment, nerdFonts bool) string {
+	active := filterEnabled(segs)
+	if len(active) == 0 {
+		return ""
+	}
+
+	sep := SeparatorLeftNerd
+	if !nerdFonts {
+		sep = SeparatorLeftText
+	}
+
+	var b strings.Builder
+
+	for i, seg := range active {
+		if nerdFonts {
+			// Left-pointing separator before the segment
+			if i == 0 {
+				// First right segment: separator with segment bg as fg on reset background
+				b.WriteString(fmt.Sprintf("\033[38;5;%sm%s", seg.BG, sep))
+			} else {
+				prev := active[i-1]
+				b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm%s", seg.BG, prev.BG, sep))
+			}
+			// Segment body: fg on bg
+			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", seg.FG, seg.BG, seg.Text))
+		} else {
+			if i > 0 {
+				b.WriteString(sep)
+			}
+			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", seg.FG, seg.BG, seg.Text))
+		}
+	}
+
+	// Reset at the end
+	b.WriteString("\033[0m")
+	return b.String()
+}
+
 func filterEnabled(segs []segments.Segment) []segments.Segment {
 	var result []segments.Segment
 	for _, s := range segs {

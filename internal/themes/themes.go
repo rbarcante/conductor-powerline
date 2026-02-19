@@ -27,6 +27,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "231", BG: "208"}, // orange warning
 			"block-critical": {FG: "231", BG: "196"}, // red critical
 			"weekly":         {FG: "231", BG: "62"},  // purple
+			"context":          {FG: "231", BG: "36"},  // teal/green normal
+			"context-warning":  {FG: "231", BG: "178"}, // yellow/amber warning
+			"context-critical": {FG: "231", BG: "160"}, // red critical
 		},
 	},
 	"light": {
@@ -39,6 +42,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "231", BG: "214"}, // orange warning
 			"block-critical": {FG: "231", BG: "196"}, // red critical
 			"weekly":         {FG: "231", BG: "135"}, // purple
+			"context":          {FG: "231", BG: "37"},  // teal normal
+			"context-warning":  {FG: "231", BG: "214"}, // gold warning
+			"context-critical": {FG: "231", BG: "196"}, // red critical
 		},
 	},
 	"nord": {
@@ -51,6 +57,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "223", BG: "172"}, // yellow warning
 			"block-critical": {FG: "231", BG: "131"}, // red critical
 			"weekly":         {FG: "146", BG: "60"},  // blue
+			"context":          {FG: "189", BG: "66"},  // frost teal normal
+			"context-warning":  {FG: "223", BG: "172"}, // aurora yellow warning
+			"context-critical": {FG: "231", BG: "131"}, // aurora red critical
 		},
 	},
 	"gruvbox": {
@@ -63,6 +72,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "223", BG: "172"}, // yellow warning
 			"block-critical": {FG: "223", BG: "124"}, // red critical
 			"weekly":         {FG: "145", BG: "102"}, // blue
+			"context":          {FG: "223", BG: "65"},  // aqua normal
+			"context-warning":  {FG: "223", BG: "172"}, // yellow warning
+			"context-critical": {FG: "223", BG: "124"}, // red critical
 		},
 	},
 	"tokyo-night": {
@@ -75,6 +87,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "223", BG: "172"}, // orange warning
 			"block-critical": {FG: "231", BG: "197"}, // red critical
 			"weekly":         {FG: "147", BG: "60"},  // blue
+			"context":          {FG: "193", BG: "59"},  // green normal
+			"context-warning":  {FG: "223", BG: "172"}, // orange warning
+			"context-critical": {FG: "231", BG: "197"}, // red critical
 		},
 	},
 	"rose-pine": {
@@ -87,6 +102,9 @@ var registry = map[string]Theme{
 			"block-warning":  {FG: "223", BG: "172"}, // gold warning
 			"block-critical": {FG: "231", BG: "131"}, // love critical
 			"weekly":         {FG: "183", BG: "59"},  // iris
+			"context":          {FG: "152", BG: "59"},  // foam normal
+			"context-warning":  {FG: "223", BG: "172"}, // gold warning
+			"context-critical": {FG: "231", BG: "131"}, // love critical
 		},
 	},
 }

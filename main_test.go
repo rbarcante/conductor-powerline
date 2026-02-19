@@ -141,6 +141,71 @@ func TestIntegrationClaudeCodeSchema(t *testing.T) {
 	}
 }
 
+func TestIntegrationContextWindowSegment(t *testing.T) {
+	binPath := t.TempDir() + "/conductor-powerline"
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	// Run with context_window data
+	input := `{
+		"model": "claude-opus-4-6",
+		"workspace": "/tmp/my-project",
+		"context_window": {
+			"current_usage": {
+				"input_tokens": 50000,
+				"cache_creation_input_tokens": 10000,
+				"cache_read_input_tokens": 20000
+			},
+			"context_window_size": 200000
+		}
+	}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// (50000+10000+20000)/200000*100 = 40%
+	if !strings.Contains(output, "40%") {
+		t.Errorf("expected '40%%' context segment in output, got: %q", output)
+	}
+	// Should contain the empty circle icon (nerd fonts enabled by default)
+	if !strings.Contains(output, "○") {
+		t.Errorf("expected '○' icon for 40%% usage, got: %q", output)
+	}
+}
+
+func TestIntegrationContextWindowAbsent(t *testing.T) {
+	binPath := t.TempDir() + "/conductor-powerline"
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	// Run without context_window data
+	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// Context segment should NOT appear when data is absent
+	if strings.Contains(output, "○") || strings.Contains(output, "◐") || strings.Contains(output, "●") {
+		t.Errorf("expected no context segment icons when data absent, got: %q", output)
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }

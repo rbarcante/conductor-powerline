@@ -101,6 +101,7 @@ conductor-powerline/
 │   ├── segments/               # Individual segment providers
 │   │   ├── block.go            # 5-hour block usage
 │   │   ├── weekly.go           # 7-day rolling usage
+│   │   ├── context.go          # Context window % (right-side)
 │   │   ├── git.go              # Git branch + dirty state
 │   │   ├── model.go            # Active Claude model
 │   │   ├── directory.go        # Repo/directory name
