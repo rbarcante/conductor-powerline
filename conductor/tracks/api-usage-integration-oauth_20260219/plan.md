@@ -2,17 +2,17 @@
 
 ## Phase 1: OAuth Token Retrieval
 
-- [ ] Task: Create `internal/oauth/oauth_test.go` — tests for token retrieval orchestration (platform dispatch, fallback chain, all-fail returns error)
-- [ ] Task: Create `internal/oauth/oauth.go` — `GetToken()` function that dispatches to platform-specific retriever based on `runtime.GOOS`, falls through to credential file
-- [ ] Task: Create `internal/oauth/keychain_test.go` — tests for macOS Keychain retrieval (success, not found, command error) using exec mock
-- [ ] Task: Create `internal/oauth/keychain.go` — macOS `security find-generic-password` token retrieval
-- [ ] Task: Create `internal/oauth/wincred_test.go` — tests for Windows Credential Manager retrieval
-- [ ] Task: Create `internal/oauth/wincred.go` — Windows credential retrieval via `wincred`
-- [ ] Task: Create `internal/oauth/secretool_test.go` — tests for Linux secret-tool retrieval
-- [ ] Task: Create `internal/oauth/secretool.go` — Linux `secret-tool lookup` token retrieval
-- [ ] Task: Create `internal/oauth/credfile_test.go` — tests for credential file fallback (valid JSON, missing file, malformed JSON)
-- [ ] Task: Create `internal/oauth/credfile.go` — read token from `~/.claude/.credentials.json`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Create `internal/oauth/oauth_test.go` — tests for token retrieval orchestration (platform dispatch, fallback chain, all-fail returns error) [ccf22d9]
+- [x] Task: Create `internal/oauth/oauth.go` — `GetToken()` function that dispatches to platform-specific retriever based on `runtime.GOOS`, falls through to credential file [ccf22d9]
+- [x] Task: Create `internal/oauth/keychain_test.go` — tests for macOS Keychain retrieval (success, not found, command error) using exec mock [ccf22d9]
+- [x] Task: Create `internal/oauth/keychain.go` — macOS `security find-generic-password` token retrieval [ccf22d9]
+- [x] Task: Create `internal/oauth/wincred_test.go` — tests for Windows Credential Manager retrieval [ccf22d9]
+- [x] Task: Create `internal/oauth/wincred.go` — Windows credential retrieval via `wincred` [ccf22d9]
+- [x] Task: Create `internal/oauth/secretool_test.go` — tests for Linux secret-tool retrieval [ccf22d9]
+- [x] Task: Create `internal/oauth/secretool.go` — Linux `secret-tool lookup` token retrieval [ccf22d9]
+- [x] Task: Create `internal/oauth/credfile_test.go` — tests for credential file fallback (valid JSON, missing file, malformed JSON) [ccf22d9]
+- [x] Task: Create `internal/oauth/credfile.go` — read token from `~/.claude/.credentials.json` [ccf22d9]
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: API Client & Caching
 
