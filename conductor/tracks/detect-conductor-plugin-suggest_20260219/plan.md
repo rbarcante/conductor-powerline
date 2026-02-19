@@ -33,7 +33,7 @@
   - Accept an optional base dir parameter for testability (dependency injection)
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Integration with Main Pipeline
+## Phase 3: Integration with Main Pipeline [checkpoint: b203752]
 
 - [~] Task: Add `"conductor"` to default config in `internal/config/config.go`
   - Add `"conductor": {Enabled: true}` to `DefaultConfig().Segments`
