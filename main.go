@@ -73,13 +73,13 @@ func run() error {
 func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, usageData *oauth.UsageData) []segments.Segment {
 	builders := map[string]func() segments.Segment{
 		"directory": func() segments.Segment {
-			return segments.Directory(hookData.Workspace, theme)
+			return segments.Directory(hookData.WorkspacePath(), theme)
 		},
 		"git": func() segments.Segment {
 			return segments.Git(theme)
 		},
 		"model": func() segments.Segment {
-			return segments.Model(hookData.Model, theme)
+			return segments.Model(hookData.ModelID(), theme)
 		},
 		"block": func() segments.Segment {
 			return segments.Block(usageData, theme)
