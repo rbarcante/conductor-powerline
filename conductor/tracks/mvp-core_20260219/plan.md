@@ -16,7 +16,7 @@
 - [x] Task: Create `internal/themes/themes.go` — define 6 themes (dark, light, nord, gruvbox, tokyo-night, rose-pine) with segment color maps [b66642d]
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Segments
+## Phase 3: Segments [checkpoint: c17aa0f]
 
 - [x] Task: Create `internal/segments/types.go` — define Segment struct (Name, Text, FG, BG, Enabled) [cf6b40c]
 - [x] Task: Create `internal/segments/directory_test.go` — tests for directory name extraction from paths [2571adb]
@@ -29,9 +29,9 @@
 
 ## Phase 4: Renderer & Integration
 
-- [ ] Task: Create `internal/render/symbols.go` — define powerline glyphs and text fallback constants
-- [ ] Task: Create `internal/render/renderer_test.go` — tests for ANSI output, segment ordering, compact mode, empty segments, no trailing newline
-- [ ] Task: Create `internal/render/renderer.go` — build ANSI-colored powerline string from ordered segments
-- [ ] Task: Create `main.go` — orchestrate stdin→config→theme→segments→render→stdout pipeline
-- [ ] Task: Create `main_test.go` — integration test: pipe stdin JSON, verify stdout output format
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+- [x] Task: Create `internal/render/symbols.go` — define powerline glyphs and text fallback constants [6595268]
+- [x] Task: Create `internal/render/renderer_test.go` — tests for ANSI output, segment ordering, compact mode, empty segments, no trailing newline [d198728]
+- [x] Task: Create `internal/render/renderer.go` — build ANSI-colored powerline string from ordered segments [d198728]
+- [x] Task: Create `main.go` — orchestrate stdin→config→theme→segments→render→stdout pipeline [f785498]
+- [x] Task: Create `main_test.go` — integration test: pipe stdin JSON, verify stdout output format [f785498]
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
