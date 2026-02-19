@@ -1,0 +1,8 @@
+{
+  "id": "sync-theme-colors-claude_20260219",
+  "type": "refactor",
+  "status": "planned",
+  "branch": "refactor/better-colors",
+  "created": "2026-02-19",
+  "description": "Sync theme colors"
+}

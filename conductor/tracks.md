@@ -21,6 +21,9 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
+
+- [ ] **Track: Sync theme colors**
+  *Link: [sync-theme-colors-claude_20260219](./conductor/tracks/sync-theme-colors-claude_20260219/)*
 - [x] **Track: Context window percentage segment at end of powerline**
   *Link: [context-window-percentage-segment_20260219](./conductor/tracks/context-window-percentage-segment_20260219/)*
 - [x] **Track: Usage not showing — only fallback '--'. Block and weekly segments always display '--' instead of actual API usage data.**
