@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/rbarcante/conductor-powerline/internal/config"
 	"github.com/rbarcante/conductor-powerline/internal/hook"
+	"github.com/rbarcante/conductor-powerline/internal/oauth"
 	"github.com/rbarcante/conductor-powerline/internal/render"
 	"github.com/rbarcante/conductor-powerline/internal/segments"
 	"github.com/rbarcante/conductor-powerline/internal/themes"
@@ -40,17 +42,35 @@ func run() error {
 	// 3. Resolve theme
 	theme, _ := themes.Get(cfg.Theme)
 
-	// 4. Build segments in configured order
-	segs := buildSegments(cfg, hookData, theme)
+	// 4. Fetch usage data in parallel with segment building
+	var usageData *oauth.UsageData
+	var wg sync.WaitGroup
 
-	// 5. Render and output (no trailing newline)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		client := oauth.NewClient("https://api.anthropic.com/v1/usage", cfg.APITimeout.Duration)
+		cache := oauth.NewCache(cfg.CacheTTL.Duration)
+		data, err := oauth.FetchUsage(client, cache)
+		if err == nil {
+			usageData = data
+		}
+		// On error, usageData remains nil → segments show "--" placeholder
+	}()
+
+	wg.Wait()
+
+	// 5. Build segments in configured order
+	segs := buildSegments(cfg, hookData, theme, usageData)
+
+	// 6. Render and output (no trailing newline)
 	output := render.Render(segs, cfg.Display.NerdFonts, cfg.Display.CompactWidth)
 	fmt.Print(output)
 
 	return nil
 }
 
-func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme) []segments.Segment {
+func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, usageData *oauth.UsageData) []segments.Segment {
 	builders := map[string]func() segments.Segment{
 		"directory": func() segments.Segment {
 			return segments.Directory(hookData.Workspace, theme)
@@ -60,6 +80,12 @@ func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme) []
 		},
 		"model": func() segments.Segment {
 			return segments.Model(hookData.Model, theme)
+		},
+		"block": func() segments.Segment {
+			return segments.Block(usageData, theme)
+		},
+		"weekly": func() segments.Segment {
+			return segments.Weekly(usageData, theme)
 		},
 	}
 
