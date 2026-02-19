@@ -10,6 +10,11 @@ import (
 	"github.com/rbarcante/conductor-powerline/internal/debug"
 )
 
+const version = "conductor-powerline/1.0.0"
+
+// maxResponseBody is the maximum size of an API response body (64KB).
+const maxResponseBody = 64 * 1024
+
 // usageFetcher defines the interface for fetching usage data.
 type usageFetcher interface {
 	FetchUsageData(token string) (*UsageData, error)
@@ -54,7 +59,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "conductor-powerline/1.0.0")
+	req.Header.Set("User-Agent", version)
 	req.Header.Set("anthropic-beta", "oauth-2025-04-20")
 
 	resp, err := c.httpClient.Do(req)
@@ -70,7 +75,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		return nil, fmt.Errorf("oauth: API returned status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBody))
 	if err != nil {
 		return nil, err
 	}
