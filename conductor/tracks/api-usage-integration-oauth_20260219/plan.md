@@ -1,6 +1,6 @@
 # Plan: API Usage Integration
 
-## Phase 1: OAuth Token Retrieval
+## Phase 1: OAuth Token Retrieval [checkpoint: 84c27ae]
 
 - [x] Task: Create `internal/oauth/oauth_test.go` — tests for token retrieval orchestration (platform dispatch, fallback chain, all-fail returns error) [ccf22d9]
 - [x] Task: Create `internal/oauth/oauth.go` — `GetToken()` function that dispatches to platform-specific retriever based on `runtime.GOOS`, falls through to credential file [ccf22d9]
@@ -16,13 +16,13 @@
 
 ## Phase 2: API Client & Caching
 
-- [ ] Task: Create `internal/oauth/client_test.go` — tests for API client (successful response parsing, timeout, HTTP errors, malformed JSON)
-- [ ] Task: Create `internal/oauth/client.go` — HTTP client to call Anthropic usage endpoint, parse response into structured usage data
-- [ ] Task: Create `internal/oauth/cache_test.go` — tests for cache (store/retrieve, TTL expiry, stale indicator, empty cache returns nil)
-- [ ] Task: Create `internal/oauth/cache.go` — in-memory cache for usage data with configurable TTL and stale tracking
-- [ ] Task: Create `internal/oauth/usage.go` — `FetchUsage()` function that combines client + cache: try API, cache on success, serve stale on failure
-- [ ] Task: Create `internal/oauth/usage_test.go` — tests for FetchUsage orchestration (fresh fetch, cache hit, stale fallback, first-run placeholder)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Create `internal/oauth/client_test.go` — tests for API client (successful response parsing, timeout, HTTP errors, malformed JSON) [54d301b]
+- [x] Task: Create `internal/oauth/client.go` — HTTP client to call Anthropic usage endpoint, parse response into structured usage data [54d301b]
+- [x] Task: Create `internal/oauth/cache_test.go` — tests for cache (store/retrieve, TTL expiry, stale indicator, empty cache returns nil) [54d301b]
+- [x] Task: Create `internal/oauth/cache.go` — in-memory cache for usage data with configurable TTL and stale tracking [54d301b]
+- [x] Task: Create `internal/oauth/usage.go` — `FetchUsage()` function that combines client + cache: try API, cache on success, serve stale on failure [54d301b]
+- [x] Task: Create `internal/oauth/usage_test.go` — tests for FetchUsage orchestration (fresh fetch, cache hit, stale fallback, first-run placeholder) [54d301b]
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Usage Segments & Trends
 
