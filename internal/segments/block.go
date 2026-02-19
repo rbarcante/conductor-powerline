@@ -26,9 +26,9 @@ func Block(data *oauth.UsageData, theme themes.Theme) Segment {
 	// Select color based on usage threshold
 	switch {
 	case data.BlockPercentage >= 90:
-		colors = theme.Segments["block-critical"]
+		colors = theme.Segments["critical"]
 	case data.BlockPercentage >= 70:
-		colors = theme.Segments["block-warning"]
+		colors = theme.Segments["warning"]
 	}
 
 	// Format countdown
