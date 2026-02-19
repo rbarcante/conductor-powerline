@@ -18,7 +18,7 @@
 - [x] Task: Verify fix by running the full statusline and confirming usage data appears (not `--`)
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
-## Phase 3: Test Coverage & Cleanup
+## Phase 3: Test Coverage & Cleanup [checkpoint: 9d1999e]
 
 - [x] Task: Add unit tests for the debug logging package (enable/disable, stderr output) [75eee8e]
     - Already at 100% coverage from Phase 1
