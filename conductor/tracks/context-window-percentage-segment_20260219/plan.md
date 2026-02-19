@@ -1,6 +1,6 @@
 # Plan: Context Window Percentage Segment
 
-## Phase 1: Hook Data — Context Window Parsing
+## Phase 1: Hook Data — Context Window Parsing [checkpoint: 21313d8]
 
 - [x] Task: Add `ContextWindow` struct and fields to `hook.Data` for `context_window` JSON parsing [54b6c80]
 - [x] Task: Add `ContextPercent()` method to `hook.Data` that calculates the percentage [6763b7c]
@@ -9,11 +9,11 @@
 
 ## Phase 2: Context Segment Provider
 
-- [ ] Task: Create `internal/segments/context.go` with `Context()` function returning a `Segment`
-- [ ] Task: Implement dynamic icon selection (○ < 50%, ◐ 50-80%, ● > 80%) with text fallback
-- [ ] Task: Implement dynamic color selection using theme threshold keys (`context`, `context-warning`, `context-critical`)
-- [ ] Task: Write tests — all threshold boundaries, zero percent, 100%, missing data, nerd font vs text mode
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Create `internal/segments/context.go` with `Context()` function returning a `Segment` [ecc6819]
+- [x] Task: Implement dynamic icon selection (○ < 50%, ◐ 50-80%, ● > 80%) with text fallback [ecc6819]
+- [x] Task: Implement dynamic color selection using theme threshold keys (`context`, `context-warning`, `context-critical`) [ecc6819]
+- [x] Task: Write tests — all threshold boundaries, zero percent, 100%, missing data, nerd font vs text mode [ecc6819]
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Theme Updates
 
