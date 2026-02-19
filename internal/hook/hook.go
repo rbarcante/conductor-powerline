@@ -4,6 +4,7 @@ package hook
 import (
 	"encoding/json"
 	"io"
+	"math"
 )
 
 // ContextWindowUsage holds token usage counts from the context window.
@@ -112,6 +113,18 @@ func resolveContextWindow(raw json.RawMessage) *ContextWindow {
 // ContextWindow returns the parsed context window data, or nil if absent.
 func (d Data) ContextWindow() *ContextWindow {
 	return d.contextWindow
+}
+
+// ContextPercent returns the context window usage as a rounded percentage (0-100).
+// Returns -1 if context window data is missing or window size is zero.
+func (d Data) ContextPercent() int {
+	if d.contextWindow == nil || d.contextWindow.ContextWindowSize == 0 {
+		return -1
+	}
+	u := d.contextWindow.CurrentUsage
+	total := float64(u.InputTokens + u.CacheCreationInputTokens + u.CacheReadInputTokens)
+	pct := total / float64(d.contextWindow.ContextWindowSize) * 100
+	return int(math.Round(pct))
 }
 
 // ModelID returns the model identifier.

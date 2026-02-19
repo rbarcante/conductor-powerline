@@ -252,6 +252,103 @@ func TestContextWindowPartialUsage(t *testing.T) {
 	}
 }
 
+// --- Tests for ContextPercent() ---
+
+func TestContextPercent(t *testing.T) {
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {
+				"input_tokens": 5000,
+				"cache_creation_input_tokens": 2000,
+				"cache_read_input_tokens": 3000
+			},
+			"context_window_size": 200000
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// (5000 + 2000 + 3000) / 200000 * 100 = 5%
+	got := data.ContextPercent()
+	if got != 5 {
+		t.Errorf("ContextPercent() = %d, want 5", got)
+	}
+}
+
+func TestContextPercentMissingData(t *testing.T) {
+	input := `{"model": "claude-opus-4-6"}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != -1 {
+		t.Errorf("ContextPercent() = %d, want -1 for missing data", got)
+	}
+}
+
+func TestContextPercentZeroWindowSize(t *testing.T) {
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {"input_tokens": 100},
+			"context_window_size": 0
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != -1 {
+		t.Errorf("ContextPercent() = %d, want -1 for zero window size", got)
+	}
+}
+
+func TestContextPercentRounding(t *testing.T) {
+	// 1 / 3 * 100 = 33.333... → 33
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {"input_tokens": 1},
+			"context_window_size": 3
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 33 {
+		t.Errorf("ContextPercent() = %d, want 33", got)
+	}
+}
+
+func TestContextPercentFull(t *testing.T) {
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {"input_tokens": 200000},
+			"context_window_size": 200000
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 100 {
+		t.Errorf("ContextPercent() = %d, want 100", got)
+	}
+}
+
 func TestParseWorkspaceFallbackToCurrentDir(t *testing.T) {
 	input := `{
 		"model": "claude-opus-4-6",
