@@ -2,11 +2,11 @@
 
 ## Phase 1: Diagnosis & Debug Infrastructure
 
-- [ ] Task: Add debug logging package (`internal/debug/`) with stderr output gated by `CONDUCTOR_DEBUG` env var
-- [ ] Task: Instrument `oauth.GetToken()` with debug logs for each credential source attempt and result
-- [ ] Task: Instrument `oauth.FetchUsage()` with debug logs for token retrieval, API call, and cache status
-- [ ] Task: Instrument `main.run()` with debug logs for segment build and usage data status
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Add debug logging package (`internal/debug/`) with stderr output gated by `CONDUCTOR_DEBUG` env var [75eee8e]
+- [x] Task: Instrument `oauth.GetToken()` with debug logs for each credential source attempt and result [c399b5e]
+- [x] Task: Instrument `oauth.FetchUsage()` with debug logs for token retrieval, API call, and cache status [dc5d21a]
+- [x] Task: Instrument `main.run()` with debug logs for segment build and usage data status [1a2fc00]
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Root Cause Investigation & Fix
 
