@@ -1,6 +1,6 @@
 # Plan: MVP Core
 
-## Phase 1: Project Foundation
+## Phase 1: Project Foundation [checkpoint: 98e2d15]
 
 - [x] Task: Initialize Go module (`go.mod` with `github.com/rbarcante/conductor-powerline`, Go 1.23) [a782b5d]
 - [x] Task: Create `internal/config/types.go` — define Config, DisplayConfig, SegmentConfig structs with JSON tags [80a1a93]
@@ -10,11 +10,11 @@
 
 ## Phase 2: Stdin & Theme System
 
-- [ ] Task: Create `internal/hook/hook_test.go` — tests for stdin JSON parsing (valid, empty, malformed, missing fields)
-- [ ] Task: Create `internal/hook/hook.go` — parse stdin hook data, extract model/workspace/context
-- [ ] Task: Create `internal/themes/themes_test.go` — tests for all 6 themes, color lookup, fallback to dark
-- [ ] Task: Create `internal/themes/themes.go` — define 6 themes (dark, light, nord, gruvbox, tokyo-night, rose-pine) with segment color maps
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Create `internal/hook/hook_test.go` — tests for stdin JSON parsing (valid, empty, malformed, missing fields) [e5ec24e]
+- [x] Task: Create `internal/hook/hook.go` — parse stdin hook data, extract model/workspace/context [e5ec24e]
+- [x] Task: Create `internal/themes/themes_test.go` — tests for all 6 themes, color lookup, fallback to dark [b66642d]
+- [x] Task: Create `internal/themes/themes.go` — define 6 themes (dark, light, nord, gruvbox, tokyo-night, rose-pine) with segment color maps [b66642d]
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Segments
 
