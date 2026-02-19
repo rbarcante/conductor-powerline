@@ -15,3 +15,4 @@ Refactor `internal/hook/hook.go` to parse and prefer the pre-calculated `context
 - [spec.md](./spec.md) — Requirements and acceptance criteria
 - [plan.md](./plan.md) — Implementation plan
 - [decisions.md](./decisions.md) — Architecture decisions
+- [Code Review Report](./review.md) - Auto-generated review on track completion

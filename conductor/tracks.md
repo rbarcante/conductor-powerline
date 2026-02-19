@@ -23,7 +23,7 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
-- [~] **Track: Use context_window.used_percentage from Claude Code statusline JSON**
+- [x] **Track: Use context_window.used_percentage from Claude Code statusline JSON**
   *Link: [use-context-window-used_20260219](./conductor/tracks/use-context-window-used_20260219/)*
 - [x] **Track: Sync theme colors**
   *Link: [sync-theme-colors-claude_20260219](./conductor/tracks/sync-theme-colors-claude_20260219/)*
