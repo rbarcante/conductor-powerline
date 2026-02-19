@@ -2,10 +2,10 @@
 
 ## Phase 1: Update Theme Definitions
 
-- [x] Task: Convert conductor-powerline hex colors to ANSI 256 codes for all 6 themes
+- [x] Task: Convert hex colors to ANSI 256 codes for all 6 themes
 - [x] Task: Restructure `themes.go` — replace per-segment warning/critical keys (`block-warning`, `block-critical`, `context-warning`, `context-critical`) with unified `warning` and `critical` keys
-- [x] Task: Add new segment color keys (`opus`, `sonnet`) to all 6 themes with correct conductor-powerline values
-- [x] Task: Update `block`, `weekly`, `context` segment colors to use dark-bg/colored-fg style matching conductor-powerline
+- [x] Task: Add new segment color keys (`opus`, `sonnet`) to all 6 themes with correct values
+- [x] Task: Update `block`, `weekly`, `context` segment colors to use dark-bg/colored-fg style
 - [x] Task: Update `themes_test.go` to validate new key structure (unified warning/critical, new opus/sonnet keys)
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

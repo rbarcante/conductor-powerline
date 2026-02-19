@@ -1,5 +1,6 @@
 conductor-powerline
 conductor-powerline.exe
+!conductor/
 *.out
 *.html
 /tmp/

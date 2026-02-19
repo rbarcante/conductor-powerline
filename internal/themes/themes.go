@@ -16,7 +16,7 @@ type Theme struct {
 }
 
 var registry = map[string]Theme{
-	// Colors ported from conductor-powerline hex values via hexToAnsi256 conversion.
+	// Colors defined as hex values converted via hexToAnsi256.
 	// Unified warning/critical keys replace per-segment variants.
 	"dark": {
 		Name: "dark",

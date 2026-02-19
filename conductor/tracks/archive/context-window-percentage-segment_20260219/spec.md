@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add a context window percentage segment that displays the current Claude Code context window utilization as a percentage. The segment renders on the **right side** of the powerline (with left-pointing separators), matching the conductor-powerline reference implementation. It reads `context_window` data from the stdin hook JSON.
+Add a context window percentage segment that displays the current Claude Code context window utilization as a percentage. The segment renders on the **right side** of the powerline (with left-pointing separators). It reads `context_window` data from the stdin hook JSON.
 
 ## Functional Requirements
 
