@@ -1,15 +1,15 @@
 # Plan: Fix Cross-Project Cache Contamination
 
-## Phase 1: Fix Git Segment Workspace Isolation `[status: pending]`
+## Phase 1: Fix Git Segment Workspace Isolation `[status: complete]`
 
-- [ ] Task 1.1: Add workspace parameter to `Git()` function signature
+- [x] Task 1.1: Add workspace parameter to `Git()` function signature [29b6503]
   - Update `segments.Git(theme)` → `segments.Git(workspace string, theme themes.Theme)`
   - Update `runGitCommand` to accept an optional `-C <workspace>` prefix
   - TDD: Write tests for git commands with explicit workspace path
-- [ ] Task 1.2: Wire workspace into `Git()` call in `main.go`
+- [x] Task 1.2: Wire workspace into `Git()` call in `main.go` [29b6503]
   - Update `buildSegments()` to pass `hookData.WorkspacePath()` to `segments.Git()`
   - TDD: Test that `buildSegments` passes workspace correctly
-- [ ] Task 1.3: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task 1.3: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Implement File-Based Usage Cache `[status: pending]`
 
