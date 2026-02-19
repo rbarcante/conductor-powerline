@@ -43,7 +43,7 @@ func GetToken() (string, error) {
 	if platformRetriever != nil {
 		token, err := platformRetriever()
 		if err == nil {
-			debug.Logf("token", "%s retriever succeeded (token length=%d)", platformName, len(token))
+			debug.Logf("token", "%s retriever succeeded", platformName)
 			return token, nil
 		}
 		debug.Logf("token", "%s retriever failed: %v", platformName, err)
@@ -53,7 +53,7 @@ func GetToken() (string, error) {
 	debug.Logf("token", "trying credfile fallback")
 	token, err := credfileRetriever()
 	if err == nil {
-		debug.Logf("token", "credfile retriever succeeded (token length=%d)", len(token))
+		debug.Logf("token", "credfile retriever succeeded")
 		return token, nil
 	}
 	debug.Logf("token", "credfile retriever failed: %v", err)

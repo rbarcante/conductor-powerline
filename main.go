@@ -18,6 +18,8 @@ import (
 	"github.com/rbarcante/conductor-powerline/internal/themes"
 )
 
+const anthropicUsageURL = "https://api.anthropic.com/api/oauth/usage"
+
 func main() {
 	debug.Init()
 	if err := run(); err != nil {
@@ -56,7 +58,7 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		client := oauth.NewClient("https://api.anthropic.com/api/oauth/usage", cfg.APITimeout.Duration)
+		client := oauth.NewClient(anthropicUsageURL, cfg.APITimeout.Duration)
 		cache := oauth.NewCache(cfg.CacheTTL.Duration)
 		data, err := oauth.FetchUsage(client, cache)
 		if err == nil {

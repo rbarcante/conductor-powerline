@@ -20,9 +20,7 @@ func FetchUsage(fetcher usageFetcher, cache *Cache) (*UsageData, error) {
 		debug.Logf("usage", "token retrieval failed: %v", err)
 		return nil, err
 	}
-	debug.Logf("usage", "token retrieved (length=%d)", len(token))
-
-	debug.Logf("usage", "calling API...")
+	debug.Logf("usage", "token retrieved, calling API...")
 	data, err := fetcher.FetchUsageData(token)
 	if err == nil {
 		data.IsStale = false
