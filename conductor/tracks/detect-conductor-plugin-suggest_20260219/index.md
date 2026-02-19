@@ -15,3 +15,4 @@ Add a new `conductor` segment to the powerline statusline that detects whether t
 - [Specification](./spec.md)
 - [Plan](./plan.md)
 - [Decisions](./decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion
