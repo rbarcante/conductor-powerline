@@ -27,7 +27,7 @@
 - [x] Task: Create `internal/segments/model.go` — map model identifiers to display names [f53f2fb]
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
-## Phase 4: Renderer & Integration
+## Phase 4: Renderer & Integration [checkpoint: 706e5a6]
 
 - [x] Task: Create `internal/render/symbols.go` — define powerline glyphs and text fallback constants [6595268]
 - [x] Task: Create `internal/render/renderer_test.go` — tests for ANSI output, segment ordering, compact mode, empty segments, no trailing newline [d198728]
