@@ -16,3 +16,8 @@ Go module foundation, config system, powerline renderer, theme engine, and core 
 OAuth token retrieval from all platform credential stores and Anthropic API calls for 5-hour block and 7-day rolling usage data. Includes caching layer for graceful degradation and usage trend indicators.
 
 **Directory:** `conductor/tracks/api-usage-integration-oauth_20260219/`
+
+## Active Tracks
+
+- [x] **Track: Statusline not showing on Claude Code**
+  *Link: [statusline-not-showing-claude_20260219](./conductor/tracks/statusline-not-showing-claude_20260219/)*
