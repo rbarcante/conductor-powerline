@@ -8,14 +8,14 @@ import (
 
 // modelNames maps known model ID prefixes to friendly display names.
 var modelNames = map[string]string{
-	"claude-opus-4-6":    "Opus 4.6",
-	"claude-sonnet-4-6":  "Sonnet 4.6",
-	"claude-sonnet-4-5":  "Sonnet 4.5",
-	"claude-haiku-4-5":   "Haiku 4.5",
-	"claude-opus-4-5":    "Opus 4.5",
-	"claude-sonnet-4-0":  "Sonnet 4",
-	"claude-haiku-3-5":   "Haiku 3.5",
-	"claude-sonnet-3-5":  "Sonnet 3.5",
+	"claude-opus-4-6":   "Opus 4.6",
+	"claude-sonnet-4-6": "Sonnet 4.6",
+	"claude-sonnet-4-5": "Sonnet 4.5",
+	"claude-haiku-4-5":  "Haiku 4.5",
+	"claude-opus-4-5":   "Opus 4.5",
+	"claude-sonnet-4-0": "Sonnet 4",
+	"claude-haiku-3-5":  "Haiku 3.5",
+	"claude-sonnet-3-5": "Sonnet 3.5",
 }
 
 // Model returns a segment displaying the friendly name of the active Claude model.
