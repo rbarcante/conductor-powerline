@@ -56,7 +56,7 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		client := oauth.NewClient("https://api.anthropic.com/v1/usage", cfg.APITimeout.Duration)
+		client := oauth.NewClient("https://api.anthropic.com/api/oauth/usage", cfg.APITimeout.Duration)
 		cache := oauth.NewCache(cfg.CacheTTL.Duration)
 		data, err := oauth.FetchUsage(client, cache)
 		if err == nil {

@@ -13,11 +13,17 @@ func TestClientSuccessfulResponse(t *testing.T) {
 		if auth := r.Header.Get("Authorization"); auth != "Bearer test-token" {
 			t.Errorf("expected Bearer test-token, got %q", auth)
 		}
+		// Verify required headers
+		if beta := r.Header.Get("anthropic-beta"); beta != "oauth-2025-04-20" {
+			t.Errorf("expected anthropic-beta header, got %q", beta)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{
-			"blockUsage": {"percentUsed": 72.5, "resetAt": "2026-02-19T18:00:00Z"},
-			"weeklyUsage": {"percentUsed": 45.0, "opusPercent": 30.0, "sonnetPercent": 15.0, "resetAt": "2026-02-23T00:00:00Z"}
+			"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 72.5},
+			"seven_day": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 45.0},
+			"seven_day_opus": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 30.0},
+			"seven_day_sonnet": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 15.0}
 		}`))
 	}))
 	defer server.Close()

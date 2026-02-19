@@ -9,16 +9,35 @@ func TestKeychainSuccess(t *testing.T) {
 	origRunner := keychainCommandRunner
 	defer func() { keychainCommandRunner = origRunner }()
 
+	// Keychain returns JSON with the Claude Code credential format
 	keychainCommandRunner = func(args ...string) (string, error) {
-		return "sk-ant-oauth-test-token-12345", nil
+		return `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-test-token"}}`, nil
 	}
 
 	token, err := getKeychainToken()
 	if err != nil {
 		t.Fatalf("expected token, got error: %v", err)
 	}
-	if token != "sk-ant-oauth-test-token-12345" {
-		t.Errorf("expected token value, got %q", token)
+	if token != "sk-ant-oat01-test-token" {
+		t.Errorf("expected access token, got %q", token)
+	}
+}
+
+func TestKeychainRawToken(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	// Some setups may store the raw token directly
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return "sk-ant-oat01-raw-token-12345", nil
+	}
+
+	token, err := getKeychainToken()
+	if err != nil {
+		t.Fatalf("expected token, got error: %v", err)
+	}
+	if token != "sk-ant-oat01-raw-token-12345" {
+		t.Errorf("expected raw token, got %q", token)
 	}
 }
 
