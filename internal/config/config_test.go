@@ -19,7 +19,7 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Display.CompactWidth != 100 {
 		t.Errorf("expected default CompactWidth 100, got %d", cfg.Display.CompactWidth)
 	}
-	expectedOrder := []string{"directory", "git", "model", "conductor", "block", "weekly", "context"}
+	expectedOrder := []string{"directory", "git", "model", "block", "weekly", "conductor", "context"}
 	if len(cfg.SegmentOrder) != len(expectedOrder) {
 		t.Fatalf("expected %d segment order items, got %d", len(expectedOrder), len(cfg.SegmentOrder))
 	}
