@@ -1,6 +1,6 @@
 # Plan: Usage Not Showing — Only Fallback '--'
 
-## Phase 1: Diagnosis & Debug Infrastructure
+## Phase 1: Diagnosis & Debug Infrastructure [checkpoint: e4c7609]
 
 - [x] Task: Add debug logging package (`internal/debug/`) with stderr output gated by `CONDUCTOR_DEBUG` env var [75eee8e]
 - [x] Task: Instrument `oauth.GetToken()` with debug logs for each credential source attempt and result [c399b5e]
@@ -10,11 +10,13 @@
 
 ## Phase 2: Root Cause Investigation & Fix
 
-- [ ] Task: Run the tool with `CONDUCTOR_DEBUG=1` to identify the exact failure point in the OAuth → API pipeline
-- [ ] Task: Write failing test(s) that reproduce the identified root cause
-- [ ] Task: Implement the fix — make the pipeline succeed with a valid token and real API
-- [ ] Task: Verify fix by running the full statusline and confirming usage data appears (not `--`)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Run the tool with `CONDUCTOR_DEBUG=1` to identify the exact failure point in the OAuth → API pipeline [diagnosis]
+    - Root cause: credfile.go expects `{"oauthToken":"..."}` but actual format is `{"claudeAiOauth":{"accessToken":"..."}}`
+    - Keychain has no entry — Claude Code only uses the credentials file on macOS
+- [x] Task: Write failing test(s) that reproduce the identified root cause [331cf28]
+- [x] Task: Implement the fix — make the pipeline succeed with a valid token and real API [dab30a5]
+- [x] Task: Verify fix by running the full statusline and confirming usage data appears (not `--`)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Test Coverage & Cleanup
 
