@@ -89,6 +89,60 @@ func TestClientMalformedJSON(t *testing.T) {
 	}
 }
 
+func TestClientNullBuckets(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		// Real API returns null for opus when not used
+		w.Write([]byte(`{
+			"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 18.0},
+			"seven_day": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 14.0},
+			"seven_day_opus": null,
+			"seven_day_sonnet": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 10.0}
+		}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, 5*time.Second)
+	data, err := client.FetchUsageData("test-token")
+	if err != nil {
+		t.Fatalf("expected success, got error: %v", err)
+	}
+
+	if data.BlockPercentage != 18.0 {
+		t.Errorf("expected block 18.0, got %f", data.BlockPercentage)
+	}
+	if data.OpusPercentage != 0 {
+		t.Errorf("expected opus 0 (null bucket), got %f", data.OpusPercentage)
+	}
+	if data.SonnetPercentage != 10.0 {
+		t.Errorf("expected sonnet 10.0, got %f", data.SonnetPercentage)
+	}
+}
+
+func TestClientPartialResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		// Only five_hour present
+		w.Write([]byte(`{"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 50.0}}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, 5*time.Second)
+	data, err := client.FetchUsageData("test-token")
+	if err != nil {
+		t.Fatalf("expected success, got error: %v", err)
+	}
+
+	if data.BlockPercentage != 50.0 {
+		t.Errorf("expected block 50.0, got %f", data.BlockPercentage)
+	}
+	if data.WeeklyPercentage != 0 {
+		t.Errorf("expected weekly 0 (missing), got %f", data.WeeklyPercentage)
+	}
+}
+
 func TestClientServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

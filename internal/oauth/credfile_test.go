@@ -80,6 +80,25 @@ func TestCredfileClaudeCodeFormat(t *testing.T) {
 	}
 }
 
+func TestCredfileClaudeCodeEmptyAccessToken(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	content := `{"claudeAiOauth":{"accessToken":"","refreshToken":"some-refresh"}}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	_, err := getCredfileToken()
+	if err == nil {
+		t.Error("expected error for empty accessToken in Claude Code format")
+	}
+}
+
 func TestCredfileEmptyToken(t *testing.T) {
 	dir := t.TempDir()
 	credPath := filepath.Join(dir, ".credentials.json")
