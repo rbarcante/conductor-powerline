@@ -7,7 +7,7 @@
 - [x] Task: Write tests for context window parsing — valid data, missing data, zero values, partial fields [6763b7c]
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
-## Phase 2: Context Segment Provider
+## Phase 2: Context Segment Provider [checkpoint: 1ee3146]
 
 - [x] Task: Create `internal/segments/context.go` with `Context()` function returning a `Segment` [ecc6819]
 - [x] Task: Implement dynamic icon selection (○ < 50%, ◐ 50-80%, ● > 80%) with text fallback [ecc6819]
@@ -17,9 +17,9 @@
 
 ## Phase 3: Theme Updates
 
-- [ ] Task: Add `context`, `context-warning`, `context-critical` color entries to all 6 themes
-- [ ] Task: Write/update theme tests to verify new entries exist
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Add `context`, `context-warning`, `context-critical` color entries to all 6 themes [f93ec02]
+- [x] Task: Write/update theme tests to verify new entries exist [f93ec02]
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
 ## Phase 4: Right-Side Rendering
 
