@@ -6,7 +6,7 @@
 
 ---
 
-## Phase 1: Extend `ContextWindow` Struct and Update `ContextPercent()`
+## Phase 1: Extend `ContextWindow` Struct and Update `ContextPercent()` [checkpoint: 1b26133]
 
 ### Tasks
 
@@ -40,13 +40,13 @@
 
 ---
 
-## Phase 2: Checkpoint and Cleanup
+## Phase 2: Checkpoint and Cleanup [checkpoint: pending]
 
 ### Tasks
 
-- [ ] Task: Verify no regressions in dependent code
+- [x] Task: Verify no regressions in dependent code [1b26133]
   - `go vet ./...`
   - `go build ./...`
   - Confirm `main.go` and `segments/context.go` need no changes
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
