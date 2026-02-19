@@ -19,5 +19,5 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 ## Active Tracks
 
-- [ ] **Track: Statusline not showing on Claude Code**
+- [x] **Track: Statusline not showing on Claude Code**
   *Link: [statusline-not-showing-claude_20260219](./conductor/tracks/statusline-not-showing-claude_20260219/)*
