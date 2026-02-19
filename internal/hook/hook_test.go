@@ -349,6 +349,134 @@ func TestContextPercentFull(t *testing.T) {
 	}
 }
 
+// --- Tests for used_percentage pre-calculated field ---
+
+func TestContextPercentUsedPercentageField(t *testing.T) {
+	// When used_percentage is present, ContextPercent() should return its rounded value
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {
+				"input_tokens": 10000,
+				"cache_creation_input_tokens": 0,
+				"cache_read_input_tokens": 0
+			},
+			"context_window_size": 200000,
+			"used_percentage": 42.7
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 43 {
+		t.Errorf("ContextPercent() = %d, want 43 (from used_percentage 42.7)", got)
+	}
+}
+
+func TestContextPercentUsedPercentageNull(t *testing.T) {
+	// When used_percentage is null, ContextPercent() should fall back to manual calculation
+	// 10000 / 200000 * 100 = 5
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {
+				"input_tokens": 10000,
+				"cache_creation_input_tokens": 0,
+				"cache_read_input_tokens": 0
+			},
+			"context_window_size": 200000,
+			"used_percentage": null
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 5 {
+		t.Errorf("ContextPercent() = %d, want 5 (manual fallback: 10000/200000*100)", got)
+	}
+}
+
+func TestContextPercentUsedPercentageZero(t *testing.T) {
+	// used_percentage: 0 is valid (not nil), must return 0 not -1
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {"input_tokens": 0},
+			"context_window_size": 200000,
+			"used_percentage": 0
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 0 {
+		t.Errorf("ContextPercent() = %d, want 0 (used_percentage is 0, not nil)", got)
+	}
+}
+
+func TestContextPercentPrecalcNoCurrentUsage(t *testing.T) {
+	// used_percentage present but no current_usage — should still work via pre-calc path
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"context_window_size": 200000,
+			"used_percentage": 75.4
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := data.ContextPercent()
+	if got != 75 {
+		t.Errorf("ContextPercent() = %d, want 75 (from used_percentage 75.4)", got)
+	}
+}
+
+func TestContextPercentRemainingPercentageParsed(t *testing.T) {
+	// Verify RemainingPercentage field parses correctly
+	input := `{
+		"model": "claude-opus-4-6",
+		"context_window": {
+			"current_usage": {"input_tokens": 10000},
+			"context_window_size": 200000,
+			"used_percentage": 42.7,
+			"remaining_percentage": 57.3
+		}
+	}`
+
+	data, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	cw := data.ContextWindow()
+	if cw == nil {
+		t.Fatal("expected non-nil ContextWindow")
+	}
+	if cw.RemainingPercentage == nil {
+		t.Fatal("expected non-nil RemainingPercentage")
+	}
+	if *cw.RemainingPercentage != 57.3 {
+		t.Errorf("RemainingPercentage = %v, want 57.3", *cw.RemainingPercentage)
+	}
+	if cw.UsedPercentage == nil {
+		t.Fatal("expected non-nil UsedPercentage")
+	}
+	if *cw.UsedPercentage != 42.7 {
+		t.Errorf("UsedPercentage = %v, want 42.7", *cw.UsedPercentage)
+	}
+}
+
 func TestParseWorkspaceFallbackToCurrentDir(t *testing.T) {
 	input := `{
 		"model": "claude-opus-4-6",
