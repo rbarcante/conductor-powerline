@@ -12,7 +12,7 @@ func DefaultConfig() Config {
 		Theme: "dark",
 		Display: DisplayConfig{
 			NerdFonts:    true,
-			CompactWidth: 80,
+			CompactWidth: 100,
 		},
 		Segments: map[string]SegmentConfig{
 			"directory": {Enabled: true},
