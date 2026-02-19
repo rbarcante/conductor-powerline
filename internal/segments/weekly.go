@@ -9,6 +9,7 @@ import (
 )
 
 // Weekly returns a segment displaying the 7-day rolling usage with optional Opus/Sonnet breakdown.
+// Color intensity changes based on usage thresholds, matching Block() behavior.
 func Weekly(data *oauth.UsageData, theme themes.Theme) Segment {
 	colors := theme.Segments["weekly"]
 
@@ -20,6 +21,14 @@ func Weekly(data *oauth.UsageData, theme themes.Theme) Segment {
 			BG:      colors.BG,
 			Enabled: true,
 		}
+	}
+
+	// Select color based on usage threshold
+	switch {
+	case data.WeeklyPercentage >= usageCriticalThreshold:
+		colors = theme.Segments["critical"]
+	case data.WeeklyPercentage >= usageWarningThreshold:
+		colors = theme.Segments["warning"]
 	}
 
 	var text string

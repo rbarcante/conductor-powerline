@@ -11,7 +11,7 @@ func DefaultConfig() Config {
 	return Config{
 		Theme: "dark",
 		Display: DisplayConfig{
-			NerdFonts:    true,
+			NerdFonts:    boolPtr(true),
 			CompactWidth: 100,
 		},
 		Segments: map[string]SegmentConfig{
@@ -58,12 +58,10 @@ func MergeConfig(base, override Config) Config {
 		merged.Theme = override.Theme
 	}
 
-	// Only override display settings if the override has non-zero display values.
-	overrideHasDisplay := override.Display != (DisplayConfig{})
-	if overrideHasDisplay {
-		if override.Display.CompactWidth != 0 {
-			merged.Display.CompactWidth = override.Display.CompactWidth
-		}
+	if override.Display.CompactWidth != 0 {
+		merged.Display.CompactWidth = override.Display.CompactWidth
+	}
+	if override.Display.NerdFonts != nil {
 		merged.Display.NerdFonts = override.Display.NerdFonts
 	}
 

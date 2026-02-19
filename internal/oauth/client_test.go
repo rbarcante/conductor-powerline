@@ -143,6 +143,37 @@ func TestClientPartialResponse(t *testing.T) {
 	}
 }
 
+func TestClientMalformedResetsAt(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"five_hour": {"resets_at": "not-a-date", "utilization": 60.0},
+			"seven_day": {"resets_at": "also-invalid", "utilization": 30.0}
+		}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, 5*time.Second)
+	data, err := client.FetchUsageData("test-token")
+	if err != nil {
+		t.Fatalf("expected success despite malformed timestamps, got error: %v", err)
+	}
+
+	if data.BlockPercentage != 60.0 {
+		t.Errorf("expected block percentage 60.0, got %f", data.BlockPercentage)
+	}
+	if data.WeeklyPercentage != 30.0 {
+		t.Errorf("expected weekly percentage 30.0, got %f", data.WeeklyPercentage)
+	}
+	if !data.BlockResetTime.IsZero() {
+		t.Errorf("expected zero BlockResetTime for malformed timestamp, got %v", data.BlockResetTime)
+	}
+	if !data.WeekResetTime.IsZero() {
+		t.Errorf("expected zero WeekResetTime for malformed timestamp, got %v", data.WeekResetTime)
+	}
+}
+
 func TestClientServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -15,8 +15,8 @@ const version = "conductor-powerline/1.0.0"
 // maxResponseBody is the maximum size of an API response body (64KB).
 const maxResponseBody = 64 * 1024
 
-// usageFetcher defines the interface for fetching usage data.
-type usageFetcher interface {
+// UsageFetcher defines the interface for fetching usage data.
+type UsageFetcher interface {
 	FetchUsageData(token string) (*UsageData, error)
 }
 
@@ -93,12 +93,20 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 
 	if apiResp.FiveHour != nil {
 		data.BlockPercentage = apiResp.FiveHour.Utilization
-		data.BlockResetTime, _ = time.Parse(time.RFC3339, apiResp.FiveHour.ResetsAt)
+		if t, err := time.Parse(time.RFC3339, apiResp.FiveHour.ResetsAt); err == nil {
+			data.BlockResetTime = t
+		} else {
+			debug.Logf("api", "failed to parse block reset time: %v", err)
+		}
 	}
 
 	if apiResp.SevenDay != nil {
 		data.WeeklyPercentage = apiResp.SevenDay.Utilization
-		data.WeekResetTime, _ = time.Parse(time.RFC3339, apiResp.SevenDay.ResetsAt)
+		if t, err := time.Parse(time.RFC3339, apiResp.SevenDay.ResetsAt); err == nil {
+			data.WeekResetTime = t
+		} else {
+			debug.Logf("api", "failed to parse weekly reset time: %v", err)
+		}
 	}
 
 	if apiResp.SevenDayOpus != nil {

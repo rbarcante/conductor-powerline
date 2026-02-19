@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+// secretoolServiceName is the GNOME Keyring service name for Claude credentials.
+const secretoolServiceName = "claude.ai"
+
+// secretoolTokenType is the GNOME Keyring attribute type for the OAuth token.
+const secretoolTokenType = "oauth_token"
+
 // secretoolCommandRunner executes shell commands for Linux secret-tool access.
 var secretoolCommandRunner = runSecretoolCommand
 
@@ -14,8 +20,8 @@ var secretoolCommandRunner = runSecretoolCommand
 func getSecretoolToken() (string, error) {
 	output, err := secretoolCommandRunner(
 		"lookup",
-		"service", "claude.ai",
-		"type", "oauth_token",
+		"service", secretoolServiceName,
+		"type", secretoolTokenType,
 	)
 	if err != nil {
 		return "", err

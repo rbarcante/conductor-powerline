@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// mockFetcher implements usageFetcher for testing.
+// mockFetcher implements UsageFetcher for testing.
 type mockFetcher struct {
 	data *UsageData
 	err  error

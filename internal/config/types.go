@@ -16,8 +16,21 @@ type Config struct {
 
 // DisplayConfig controls rendering behavior.
 type DisplayConfig struct {
-	NerdFonts    bool `json:"nerdFonts"`
-	CompactWidth int  `json:"compactWidth"`
+	NerdFonts    *bool `json:"nerdFonts,omitempty"`
+	CompactWidth int   `json:"compactWidth"`
+}
+
+// NerdFontsEnabled returns the effective NerdFonts value, defaulting to true if nil.
+func (d DisplayConfig) NerdFontsEnabled() bool {
+	if d.NerdFonts == nil {
+		return true
+	}
+	return *d.NerdFonts
+}
+
+// boolPtr returns a pointer to the given bool value.
+func boolPtr(b bool) *bool {
+	return &b
 }
 
 // SegmentConfig controls an individual segment's behavior.

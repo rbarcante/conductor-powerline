@@ -17,9 +17,9 @@ func Context(percent int, nerdFonts bool, theme themes.Theme) Segment {
 	// Select color based on usage threshold
 	var colorKey string
 	switch {
-	case percent > 80:
+	case percent > contextCriticalThreshold:
 		colorKey = "critical"
-	case percent >= 50:
+	case percent >= contextWarningThreshold:
 		colorKey = "warning"
 	default:
 		colorKey = "context"
@@ -30,9 +30,9 @@ func Context(percent int, nerdFonts bool, theme themes.Theme) Segment {
 	var icon string
 	if nerdFonts {
 		switch {
-		case percent > 80:
+		case percent > contextCriticalThreshold:
 			icon = "●"
-		case percent >= 50:
+		case percent >= contextWarningThreshold:
 			icon = "◐"
 		default:
 			icon = "○"

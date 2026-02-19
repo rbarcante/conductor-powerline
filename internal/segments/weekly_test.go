@@ -98,12 +98,57 @@ func TestWeeklyWeekProgress(t *testing.T) {
 
 	data := &oauth.UsageData{
 		WeeklyPercentage: 50.0,
+		WeekResetTime:    time.Now().Add(4*24*time.Hour + 12*time.Hour),
+	}
+
+	seg := Weekly(data, theme)
+	// 4d12h from now truncates to 4 days
+	if !strings.Contains(seg.Text, "4d") {
+		t.Errorf("expected '4d' day indicator in text, got %q", seg.Text)
+	}
+}
+
+func TestWeeklyColorThresholdNormal(t *testing.T) {
+	theme, _ := themes.Get("dark")
+
+	data := &oauth.UsageData{
+		WeeklyPercentage: 40.0,
+		WeekResetTime:    time.Now().Add(5 * 24 * time.Hour),
+	}
+
+	seg := Weekly(data, theme)
+	expectedColors := theme.Segments["weekly"]
+	if seg.BG != expectedColors.BG {
+		t.Errorf("expected normal BG %q, got %q", expectedColors.BG, seg.BG)
+	}
+}
+
+func TestWeeklyColorThresholdWarning(t *testing.T) {
+	theme, _ := themes.Get("dark")
+
+	data := &oauth.UsageData{
+		WeeklyPercentage: 75.0,
 		WeekResetTime:    time.Now().Add(3 * 24 * time.Hour),
 	}
 
 	seg := Weekly(data, theme)
-	// Should contain day indicator
-	if !strings.Contains(seg.Text, "d") {
-		t.Errorf("expected day indicator in text, got %q", seg.Text)
+	expectedColors := theme.Segments["warning"]
+	if seg.BG != expectedColors.BG {
+		t.Errorf("expected warning BG %q, got %q", expectedColors.BG, seg.BG)
+	}
+}
+
+func TestWeeklyColorThresholdCritical(t *testing.T) {
+	theme, _ := themes.Get("dark")
+
+	data := &oauth.UsageData{
+		WeeklyPercentage: 95.0,
+		WeekResetTime:    time.Now().Add(1 * 24 * time.Hour),
+	}
+
+	seg := Weekly(data, theme)
+	expectedColors := theme.Segments["critical"]
+	if seg.BG != expectedColors.BG {
+		t.Errorf("expected critical BG %q, got %q", expectedColors.BG, seg.BG)
 	}
 }

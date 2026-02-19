@@ -1,0 +1,8 @@
+conductor-powerline
+conductor-powerline.exe
+*.out
+*.html
+/tmp/
+.idea/
+*.swp
+*.swo

@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+// wincredTargetName is the Windows Credential Manager target for Claude credentials.
+// This is a compile-time constant and safe to embed in the PowerShell command string.
+const wincredTargetName = "claude.ai"
+
 // wincredCommandRunner executes shell commands for Windows Credential Manager access.
 var wincredCommandRunner = runWincredCommand
 
@@ -14,7 +18,7 @@ var wincredCommandRunner = runWincredCommand
 func getWincredToken() (string, error) {
 	output, err := wincredCommandRunner(
 		"-Command",
-		"(Get-StoredCredential -Target 'claude.ai').Password | ConvertFrom-SecureString -AsPlainText",
+		"(Get-StoredCredential -Target '" + wincredTargetName + "').Password | ConvertFrom-SecureString -AsPlainText",
 	)
 	if err != nil {
 		return "", err

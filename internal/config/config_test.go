@@ -13,11 +13,11 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Theme != "dark" {
 		t.Errorf("expected default theme 'dark', got %q", cfg.Theme)
 	}
-	if !cfg.Display.NerdFonts {
+	if !cfg.Display.NerdFontsEnabled() {
 		t.Error("expected NerdFonts enabled by default")
 	}
-	if cfg.Display.CompactWidth != 80 {
-		t.Errorf("expected default CompactWidth 80, got %d", cfg.Display.CompactWidth)
+	if cfg.Display.CompactWidth != 100 {
+		t.Errorf("expected default CompactWidth 100, got %d", cfg.Display.CompactWidth)
 	}
 	expectedOrder := []string{"directory", "git", "model", "block", "weekly", "context"}
 	if len(cfg.SegmentOrder) != len(expectedOrder) {
@@ -70,8 +70,8 @@ func TestLoadFromFile(t *testing.T) {
 	if cfg.Theme != "nord" {
 		t.Errorf("expected theme 'nord', got %q", cfg.Theme)
 	}
-	if cfg.Display.NerdFonts {
-		t.Error("expected NerdFonts disabled")
+	if cfg.Display.NerdFonts == nil || *cfg.Display.NerdFonts {
+		t.Error("expected NerdFonts explicitly set to false")
 	}
 	gitSeg, ok := cfg.Segments["git"]
 	if !ok {
@@ -127,9 +127,9 @@ func TestMergeConfig(t *testing.T) {
 	if merged.Display.CompactWidth != 60 {
 		t.Errorf("expected CompactWidth 60, got %d", merged.Display.CompactWidth)
 	}
-	// NerdFonts should be overridden to false (zero value from override)
-	if merged.Display.NerdFonts {
-		t.Error("expected NerdFonts false after merge with override")
+	// NerdFonts should remain true since override didn't explicitly set it
+	if !merged.Display.NerdFontsEnabled() {
+		t.Error("expected NerdFonts to remain true when override only sets CompactWidth")
 	}
 	gitSeg, ok := merged.Segments["git"]
 	if !ok {
@@ -165,11 +165,11 @@ func TestMergeConfigPartialOverride(t *testing.T) {
 		t.Errorf("expected theme 'light', got %q", merged.Theme)
 	}
 	// Display should keep base defaults
-	if !merged.Display.NerdFonts {
+	if !merged.Display.NerdFontsEnabled() {
 		t.Error("expected NerdFonts to remain true from base")
 	}
-	if merged.Display.CompactWidth != 80 {
-		t.Errorf("expected CompactWidth 80 from base, got %d", merged.Display.CompactWidth)
+	if merged.Display.CompactWidth != 100 {
+		t.Errorf("expected CompactWidth 100 from base, got %d", merged.Display.CompactWidth)
 	}
 	// Segment order should stay default
 	if len(merged.SegmentOrder) != 6 {
@@ -248,6 +248,29 @@ func TestLoad(t *testing.T) {
 	dirSeg := cfg.Segments["directory"]
 	if !dirSeg.Enabled {
 		t.Error("expected directory segment enabled from defaults")
+	}
+}
+
+func TestNerdFontsEnabledExplicitTrue(t *testing.T) {
+	val := true
+	cfg := DisplayConfig{NerdFonts: &val}
+	if !cfg.NerdFontsEnabled() {
+		t.Error("expected NerdFontsEnabled() true when explicitly set to true")
+	}
+}
+
+func TestNerdFontsEnabledExplicitFalse(t *testing.T) {
+	val := false
+	cfg := DisplayConfig{NerdFonts: &val}
+	if cfg.NerdFontsEnabled() {
+		t.Error("expected NerdFontsEnabled() false when explicitly set to false")
+	}
+}
+
+func TestNerdFontsEnabledNil(t *testing.T) {
+	cfg := DisplayConfig{}
+	if !cfg.NerdFontsEnabled() {
+		t.Error("expected NerdFontsEnabled() true when NerdFonts is nil (default)")
 	}
 }
 

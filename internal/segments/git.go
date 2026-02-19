@@ -7,6 +7,9 @@ import (
 	"github.com/rbarcante/conductor-powerline/internal/themes"
 )
 
+// BranchIcon is the Nerd Font glyph for git branch.
+const BranchIcon = "\ue0a0"
+
 // gitCommandRunner is the function used to execute git commands.
 // It is a package-level variable to allow testing with mocks.
 var gitCommandRunner = runGitCommand
@@ -22,7 +25,7 @@ func Git(theme themes.Theme) Segment {
 	}
 
 	branch = strings.TrimSpace(branch)
-	text := "\ue0a0 " + branch
+	text := BranchIcon + " " + branch
 
 	dirty, err := gitCommandRunner("status", "--porcelain")
 	if err == nil && strings.TrimSpace(dirty) != "" {

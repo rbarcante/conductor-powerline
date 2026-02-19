@@ -24,7 +24,9 @@ func main() {
 	debug.Init()
 	if err := run(); err != nil {
 		debug.Logf("main", "run error: %v", err)
-		// Silent exit — statusline must never crash or produce stderr noise
+		// Deliberate os.Exit(0) on error: a statusline tool must never return a
+		// non-zero exit code or produce stderr noise, as that would break the
+		// shell prompt rendering. Silent failure is the correct behavior here.
 		os.Exit(0)
 	}
 }
@@ -86,8 +88,8 @@ func run() error {
 	debug.Logf("main", "built %d right segments", len(rightSegs))
 
 	// 7. Render and output (no trailing newline)
-	output := render.Render(segs, cfg.Display.NerdFonts, cfg.Display.CompactWidth)
-	rightOutput := render.RenderRight(rightSegs, cfg.Display.NerdFonts)
+	output := render.Render(segs, cfg.Display.NerdFontsEnabled(), cfg.Display.CompactWidth)
+	rightOutput := render.RenderRight(rightSegs, cfg.Display.NerdFontsEnabled())
 	fmt.Print(output + rightOutput)
 
 	return nil
@@ -141,7 +143,7 @@ func buildRightSegments(cfg config.Config, hookData hook.Data, theme themes.Them
 		return nil
 	}
 
-	seg := segments.Context(hookData.ContextPercent(), cfg.Display.NerdFonts, theme)
+	seg := segments.Context(hookData.ContextPercent(), cfg.Display.NerdFontsEnabled(), theme)
 	if !seg.Enabled {
 		return nil
 	}

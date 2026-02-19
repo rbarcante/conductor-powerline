@@ -13,7 +13,7 @@ var tokenGetter = GetToken
 // FetchUsage orchestrates usage data retrieval: gets token, calls API,
 // caches on success, serves stale on failure. Returns nil with error
 // on first-run failure (no cache available).
-func FetchUsage(fetcher usageFetcher, cache *Cache) (*UsageData, error) {
+func FetchUsage(fetcher UsageFetcher, cache *Cache) (*UsageData, error) {
 	debug.Logf("usage", "fetching token...")
 	token, err := tokenGetter()
 	if err != nil {

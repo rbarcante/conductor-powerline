@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// keychainServiceName is the macOS Keychain service name for Claude Code credentials.
+const keychainServiceName = "Claude Code-credentials"
+
 // keychainCommandRunner executes shell commands for macOS Keychain access.
 var keychainCommandRunner = runKeychainCommand
 
@@ -15,7 +18,7 @@ var keychainCommandRunner = runKeychainCommand
 func getKeychainToken() (string, error) {
 	output, err := keychainCommandRunner(
 		"find-generic-password",
-		"-s", "Claude Code-credentials",
+		"-s", keychainServiceName,
 		"-w",
 	)
 	if err != nil {

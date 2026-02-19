@@ -9,6 +9,27 @@ import (
 
 const maxCompactTextLen = 12
 
+// ANSI 256-color escape code helpers.
+// Format: \033[38;5;{n}m = set foreground to color n
+//         \033[48;5;{n}m = set background to color n
+//         \033[0m        = reset all attributes
+
+// ansi256 formats text with 256-color ANSI foreground and background.
+func ansi256(fg, bg, text string) string {
+	return fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", fg, bg, text)
+}
+
+// ansiSep formats a powerline separator where the previous segment's bg
+// becomes the foreground and the next segment's bg is the background.
+func ansiSep(fg, bg, sep string) string {
+	return fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm%s", fg, bg, sep)
+}
+
+// ansiReset returns a reset sequence followed by a colored separator.
+func ansiResetSep(fg, sep string) string {
+	return fmt.Sprintf("\033[0m\033[38;5;%sm%s\033[0m", fg, sep)
+}
+
 // Render produces an ANSI-colored powerline string from ordered segments.
 // It skips disabled segments, applies compact mode below the given terminal width,
 // and returns a string with no trailing newline.
@@ -33,15 +54,12 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 		}
 
 		if nerdFonts {
-			// Segment body: fg on bg
-			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", seg.FG, seg.BG, text))
-
-			// Separator: bg of current as fg, bg of next (or reset)
+			b.WriteString(ansi256(seg.FG, seg.BG, text))
 			if i < len(active)-1 {
 				next := active[i+1]
-				b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm%s", seg.BG, next.BG, sep))
+				b.WriteString(ansiSep(seg.BG, next.BG, sep))
 			} else {
-				b.WriteString(fmt.Sprintf("\033[0m\033[38;5;%sm%s\033[0m", seg.BG, sep))
+				b.WriteString(ansiResetSep(seg.BG, sep))
 			}
 		} else {
 			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s \033[0m", seg.FG, seg.BG, text))
@@ -71,21 +89,18 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 
 	for i, seg := range active {
 		if nerdFonts {
-			// Left-pointing separator before the segment
 			if i == 0 {
-				// First right segment: separator with segment bg as fg on reset background
 				b.WriteString(fmt.Sprintf("\033[38;5;%sm%s", seg.BG, sep))
 			} else {
 				prev := active[i-1]
-				b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm%s", seg.BG, prev.BG, sep))
+				b.WriteString(ansiSep(seg.BG, prev.BG, sep))
 			}
-			// Segment body: fg on bg
-			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", seg.FG, seg.BG, seg.Text))
+			b.WriteString(ansi256(seg.FG, seg.BG, seg.Text))
 		} else {
 			if i > 0 {
 				b.WriteString(sep)
 			}
-			b.WriteString(fmt.Sprintf("\033[38;5;%sm\033[48;5;%sm %s ", seg.FG, seg.BG, seg.Text))
+			b.WriteString(ansi256(seg.FG, seg.BG, seg.Text))
 		}
 	}
 
