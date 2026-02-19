@@ -2,9 +2,10 @@
   "id": "api-usage-integration-oauth_20260219",
   "title": "API Usage Integration",
   "type": "feature",
-  "status": "planned",
+  "status": "completed",
   "priority": "high",
   "branch": "feature/api-usage-integration",
   "created": "2026-02-19",
-  "description": "OAuth token retrieval and Anthropic API calls for 5-hour block and 7-day rolling usage data with caching and trend indicators"
+  "description": "OAuth token retrieval and Anthropic API calls for 5-hour block and 7-day rolling usage data with caching and trend indicators",
+  "updated_at": "2026-02-19T15:45:58.154750Z"
 }
