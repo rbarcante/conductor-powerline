@@ -2,8 +2,9 @@
   "id": "use-context-window-used_20260219",
   "title": "Use context_window.used_percentage from Claude Code statusline JSON",
   "type": "refactor",
-  "status": "planned",
+  "status": "in-progress",
   "priority": "medium",
   "created": "2026-02-19",
-  "branch": "refactor/context-window-used-percentage"
+  "branch": "refactor/context-window-used-percentage",
+  "updated_at": "2026-02-19T19:30:33.635598Z"
 }

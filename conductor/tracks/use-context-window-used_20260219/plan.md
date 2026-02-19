@@ -10,7 +10,7 @@
 
 ### Tasks
 
-- [ ] Task: Write failing tests for `used_percentage` pre-calculated path
+- [x] Task: Write failing tests for `used_percentage` pre-calculated path [b64aec7]
   - Add `TestContextPercentUsedPercentageField` — JSON with `used_percentage: 42.7`, expect `ContextPercent() == 43`
   - Add `TestContextPercentUsedPercentageNull` — JSON with `used_percentage: null`, expect fallback to manual calc
   - Add `TestContextPercentUsedPercentageZero` — JSON with `used_percentage: 0`, expect `ContextPercent() == 0`
@@ -18,25 +18,25 @@
   - Add `TestContextPercentRemainingPercentageParsed` — verify `RemainingPercentage` field parses correctly
   - Run `go test ./internal/hook/...` and confirm failures
 
-- [ ] Task: Add `UsedPercentage` and `RemainingPercentage` fields to `ContextWindow` struct
+- [x] Task: Add `UsedPercentage` and `RemainingPercentage` fields to `ContextWindow` struct [adb2a1a]
   - In `internal/hook/hook.go`, add `UsedPercentage *float64 \`json:"used_percentage"\`` to `ContextWindow`
   - Add `RemainingPercentage *float64 \`json:"remaining_percentage"\`` to `ContextWindow`
 
-- [ ] Task: Update `ContextPercent()` to prefer pre-calculated value
+- [x] Task: Update `ContextPercent()` to prefer pre-calculated value [560b6cd]
   - When `d.contextWindow.UsedPercentage != nil`, return `int(math.Round(*d.contextWindow.UsedPercentage))`
   - Otherwise fall back to existing manual calculation
   - Keep existing guard: return `-1` if `ContextWindowSize == 0` and manual path used
 
-- [ ] Task: Run tests and confirm green
+- [x] Task: Run tests and confirm green [560b6cd]
   - `go test ./internal/hook/...`
   - Verify all new and existing tests pass
 
-- [ ] Task: Run full test suite and coverage check
+- [x] Task: Run full test suite and coverage check [560b6cd]
   - `go test ./... -coverprofile=coverage.out`
   - `go tool cover -func=coverage.out | grep hook`
   - Confirm hook package coverage ≥ 80%
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ---
 
