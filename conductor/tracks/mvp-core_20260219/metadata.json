@@ -1,8 +1,9 @@
 {
   "id": "mvp-core_20260219",
   "title": "MVP Core",
-  "status": "planned",
+  "status": "in-progress",
   "created_at": "2026-02-19",
   "type": "feature",
-  "priority": "high"
+  "priority": "high",
+  "updated_at": "2026-02-19T14:15:59.692359Z"
 }

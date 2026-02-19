@@ -2,11 +2,11 @@
 
 ## Phase 1: Project Foundation
 
-- [ ] Task: Initialize Go module (`go.mod` with `github.com/rbarcante/conductor-powerline`, Go 1.23)
-- [ ] Task: Create `internal/config/types.go` — define Config, DisplayConfig, SegmentConfig structs with JSON tags
-- [ ] Task: Create `internal/config/config_test.go` — tests for default config, file loading, deep merge, missing file handling
-- [ ] Task: Create `internal/config/config.go` — implement config loading with defaults, file discovery, deep merge
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Initialize Go module (`go.mod` with `github.com/rbarcante/conductor-powerline`, Go 1.23) [a782b5d]
+- [x] Task: Create `internal/config/types.go` — define Config, DisplayConfig, SegmentConfig structs with JSON tags [80a1a93]
+- [x] Task: Create `internal/config/config_test.go` — tests for default config, file loading, deep merge, missing file handling [fc5dc75]
+- [x] Task: Create `internal/config/config.go` — implement config loading with defaults, file discovery, deep merge [fc5dc75]
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Stdin & Theme System
 
