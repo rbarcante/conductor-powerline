@@ -1,0 +1,37 @@
+# Plan: Context Window Percentage Segment
+
+## Phase 1: Hook Data — Context Window Parsing
+
+- [ ] Task: Add `ContextWindow` struct and fields to `hook.Data` for `context_window` JSON parsing
+- [ ] Task: Add `ContextPercent()` method to `hook.Data` that calculates the percentage
+- [ ] Task: Write tests for context window parsing — valid data, missing data, zero values, partial fields
+- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+
+## Phase 2: Context Segment Provider
+
+- [ ] Task: Create `internal/segments/context.go` with `Context()` function returning a `Segment`
+- [ ] Task: Implement dynamic icon selection (○ < 50%, ◐ 50-80%, ● > 80%) with text fallback
+- [ ] Task: Implement dynamic color selection using theme threshold keys (`context`, `context-warning`, `context-critical`)
+- [ ] Task: Write tests — all threshold boundaries, zero percent, 100%, missing data, nerd font vs text mode
+- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+
+## Phase 3: Theme Updates
+
+- [ ] Task: Add `context`, `context-warning`, `context-critical` color entries to all 6 themes
+- [ ] Task: Write/update theme tests to verify new entries exist
+- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+
+## Phase 4: Right-Side Rendering
+
+- [ ] Task: Add `RenderRight()` function to `internal/render/renderer.go` using left-pointing arrow separators
+- [ ] Task: Add left arrow symbol to `symbols.go`
+- [ ] Task: Write tests — single right segment, empty input, nerd font vs text fallback
+- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+
+## Phase 5: Integration — Main & Config
+
+- [ ] Task: Add `"context"` to default segment order in config defaults
+- [ ] Task: Wire context segment in `main.go` `buildSegments()` — build separately, render on right side
+- [ ] Task: Update `run()` to call `RenderRight()` after left-side `Render()` and concatenate output
+- [ ] Task: Write integration-level test verifying end-to-end context segment output
+- [ ] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)
