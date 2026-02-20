@@ -17,3 +17,4 @@ active
 - [spec.md](./spec.md)
 - [plan.md](./plan.md)
 - [decisions.md](./decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion

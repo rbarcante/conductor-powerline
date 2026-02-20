@@ -29,7 +29,7 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
-- [ ] **Track: conductorStatus must only be shown in the first line if not installed**
+- [x] **Track: conductorStatus must only be shown in the first line if not installed**
   *Link: [conductorstatus-only-shown-first_20260220](./conductor/tracks/conductorstatus-only-shown-first_20260220/)*
 - [x] **Track: Conductor workflow status second line**
   *Link: [conductor-workflow-status-second_20260220](./conductor/tracks/conductor-workflow-status-second_20260220/)*
