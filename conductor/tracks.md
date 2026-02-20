@@ -27,6 +27,9 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
+
+- [ ] **Track: Conductor workflow status second line**
+  *Link: [conductor-workflow-status-second_20260220](./conductor/tracks/conductor-workflow-status-second_20260220/)*
 - [x] **Track: CI/CD and release-please setup**
   *Link: [release-please-setup_20260220](./conductor/tracks/release-please-setup_20260220/)*
 - [x] **Track: Fix Try Conductor OSC 8 hyperlink not clickable in tmux**

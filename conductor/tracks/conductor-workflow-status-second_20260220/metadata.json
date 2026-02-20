@@ -1,0 +1,9 @@
+{
+  "track_id": "conductor-workflow-status-second_20260220",
+  "type": "feature",
+  "status": "planned",
+  "priority": "medium",
+  "created_at": "2026-02-20",
+  "branch": "feature/conductor-workflow-line",
+  "description": "Conductor workflow status second line"
+}
