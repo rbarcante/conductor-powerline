@@ -71,7 +71,7 @@ func detectViaRegistry(claudeDir string) bool {
 	}
 
 	for key := range registry.Plugins {
-		if strings.HasPrefix(key, "claude-conductor") {
+		if strings.HasPrefix(key, "conductor@claude-conductor") {
 			return true
 		}
 	}

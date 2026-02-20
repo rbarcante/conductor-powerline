@@ -10,6 +10,10 @@ A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Cl
 - macOS Keychain, Linux secret-tool, Windows Credential Manager
 - Silent failure — never crashes or pollutes your shell
 
+## Themes
+
+![themes](assets/themes/img.png)
+
 ## Prerequisites
 
 - **Go 1.25+** — `brew install go` (macOS) · `sudo apt install golang` (Debian/Ubuntu) · `sudo pacman -S go` (Arch/Manjaro) · [go.dev/dl](https://go.dev/dl/)
@@ -84,8 +88,6 @@ Loaded in order (later overrides earlier):
 | `apiTimeout` | duration | `"5s"` | HTTP timeout for usage API |
 | `cacheTTL` | duration | `"30s"` | Cache lifetime for API responses |
 | `trendThreshold` | float | `2.0` | Percentage change threshold for trend arrows |
-
-Themes: `dark` `light` `nord` `gruvbox` `tokyo-night` `rose-pine`
 
 ## tmux
 
