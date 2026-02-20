@@ -25,6 +25,9 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
+
+- [ ] **Track: Fix Try Conductor OSC 8 hyperlink not clickable in tmux**
+  *Link: [fix-try-conductor-osc_20260220](./conductor/tracks/fix-try-conductor-osc_20260220/)*
 - [x] **Track: Detect conductor plugin and suggest installation**
   *Link: [detect-conductor-plugin-suggest_20260219](./conductor/tracks/detect-conductor-plugin-suggest_20260219/)*
 - [x] **Track: Fix cross-project cache contamination**

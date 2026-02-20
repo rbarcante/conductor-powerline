@@ -1,0 +1,9 @@
+{
+  "id": "fix-try-conductor-osc_20260220",
+  "type": "bugfix",
+  "status": "planned",
+  "priority": "medium",
+  "created": "2026-02-20",
+  "branch": "bugfix/tmux-osc8-hyperlink",
+  "description": "Fix Try Conductor OSC 8 hyperlink not clickable in tmux"
+}
