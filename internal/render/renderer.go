@@ -30,6 +30,14 @@ func ansiResetSep(fg, sep string) string {
 	return fmt.Sprintf("\033[0m\033[38;5;%sm%s\033[0m", fg, sep)
 }
 
+// osc8Open emits the OSC 8 hyperlink opening escape for the given URL.
+func osc8Open(url string) string {
+	return fmt.Sprintf("\033]8;;%s\033\\", url)
+}
+
+// osc8Close emits the OSC 8 hyperlink closing escape.
+const osc8Close = "\033]8;;\033\\"
+
 // Render produces an ANSI-colored powerline string from ordered segments.
 // It skips disabled segments, applies compact mode below the given terminal width,
 // and returns a string with no trailing newline.
@@ -53,6 +61,10 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 			text = truncate(text, maxCompactTextLen)
 		}
 
+		if seg.Link != "" {
+			b.WriteString(osc8Open(seg.Link))
+		}
+
 		if nerdFonts {
 			b.WriteString(ansi256(seg.FG, seg.BG, text))
 			if i < len(active)-1 {
@@ -66,6 +78,10 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 			if i < len(active)-1 {
 				b.WriteString(sep)
 			}
+		}
+
+		if seg.Link != "" {
+			b.WriteString(osc8Close)
 		}
 	}
 
@@ -88,6 +104,10 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 	var b strings.Builder
 
 	for i, seg := range active {
+		if seg.Link != "" {
+			b.WriteString(osc8Open(seg.Link))
+		}
+
 		if nerdFonts {
 			if i == 0 {
 				b.WriteString(fmt.Sprintf("\033[38;5;%sm%s", seg.BG, sep))
@@ -101,6 +121,10 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 				b.WriteString(sep)
 			}
 			b.WriteString(ansi256(seg.FG, seg.BG, seg.Text))
+		}
+
+		if seg.Link != "" {
+			b.WriteString(osc8Close)
 		}
 	}
 

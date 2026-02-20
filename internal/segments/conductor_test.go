@@ -20,6 +20,9 @@ func TestConductorActive(t *testing.T) {
 	if seg.Text != "✓ Conductor" {
 		t.Errorf("expected '✓ Conductor', got %q", seg.Text)
 	}
+	if seg.Link != "" {
+		t.Errorf("expected no link for active state, got %q", seg.Link)
+	}
 	colors := theme.Segments["conductor"]
 	if seg.FG != colors.FG || seg.BG != colors.BG {
 		t.Errorf("expected conductor colors, got FG=%q BG=%q", seg.FG, seg.BG)
@@ -77,9 +80,8 @@ func TestConductorNone(t *testing.T) {
 	if !strings.Contains(seg.Text, "Try Conductor") {
 		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
 	}
-	// Should contain OSC 8 hyperlink
-	if !strings.Contains(seg.Text, "\033]8;;https://github.com/rbarcante/claude-conductor") {
-		t.Errorf("expected OSC 8 hyperlink, got %q", seg.Text)
+	if seg.Link != "https://github.com/rbarcante/claude-conductor" {
+		t.Errorf("expected Link to conductor URL, got %q", seg.Link)
 	}
 	colors := theme.Segments["conductor_missing"]
 	if seg.FG != colors.FG || seg.BG != colors.BG {
@@ -91,12 +93,11 @@ func TestConductorNoneNoNerdFonts(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorNone, false, theme)
 
-	if !strings.Contains(seg.Text, "Try Conductor") {
+	if seg.Text != "Try Conductor" {
 		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
 	}
-	// OSC 8 link present even without nerd fonts
-	if !strings.Contains(seg.Text, "\033]8;;") {
-		t.Errorf("expected OSC 8 hyperlink, got %q", seg.Text)
+	if seg.Link == "" {
+		t.Error("expected Link to be set for none state")
 	}
 }
 

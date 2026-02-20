@@ -1,18 +1,10 @@
 package segments
 
 import (
-	"fmt"
-
 	"github.com/rbarcante/conductor-powerline/internal/themes"
 )
 
 const conductorURL = "https://github.com/rbarcante/claude-conductor"
-
-// osc8Link wraps text in an OSC 8 terminal hyperlink.
-// Uses \033]8;;URL\033\\TEXT\033]8;;\033\\ format which works in iTerm2 and tmux.
-func osc8Link(url, text string) string {
-	return fmt.Sprintf("\033]8;;%s\033\\%s\033]8;;\033\\", url, text)
-}
 
 // Conductor returns a segment reflecting the conductor plugin status.
 //
@@ -20,7 +12,7 @@ func osc8Link(url, text string) string {
 //   - ConductorActive:      "✓ Conductor"         (green — fully set up)
 //   - ConductorInstalled:   "⚡ Setup Conductor"   (yellow — plugin installed, project needs setup)
 //   - ConductorMarketplace: "⚡ Install Conductor"  (yellow — marketplace present, plugin not installed)
-//   - ConductorNone:        "⚡ Try Conductor"      (yellow — nothing installed, OSC 8 link)
+//   - ConductorNone:        "⚡ Try Conductor"      (yellow — nothing installed)
 func Conductor(status ConductorStatus, nerdFonts bool, theme themes.Theme) Segment {
 	switch status {
 	case ConductorActive:
@@ -73,7 +65,8 @@ func Conductor(status ConductorStatus, nerdFonts bool, theme themes.Theme) Segme
 		}
 		return Segment{
 			Name:    "conductor",
-			Text:    osc8Link(conductorURL, label),
+			Text:    label,
+			Link:    conductorURL,
 			FG:      colors.FG,
 			BG:      colors.BG,
 			Enabled: true,
