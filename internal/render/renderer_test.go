@@ -182,7 +182,7 @@ func TestLeftArrowSymbolsDefined(t *testing.T) {
 func TestOsc8OpenReturnsStandardFormat(t *testing.T) {
 	url := "https://example.com"
 	got := osc8Open(url)
-	want := "\033]8;;https://example.com\033\\"
+	want := "\033]8;;https://example.com\033\\\033[4m"
 	if got != want {
 		t.Errorf("osc8Open(%q) = %q, want %q", url, got, want)
 	}
@@ -190,7 +190,7 @@ func TestOsc8OpenReturnsStandardFormat(t *testing.T) {
 
 func TestOsc8CloseStrReturnsStandardFormat(t *testing.T) {
 	got := osc8CloseStr()
-	want := "\033]8;;\033\\"
+	want := "\033[24m\033]8;;\033\\"
 	if got != want {
 		t.Errorf("osc8CloseStr() = %q, want %q", got, want)
 	}
@@ -207,13 +207,13 @@ func TestRenderWithLinkContainsOsc8(t *testing.T) {
 
 	out := Render(segs, true, 120)
 
-	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\"
-	wantClose := "\033]8;;\033\\"
+	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\\033[4m"
+	wantClose := "\033[24m\033]8;;\033\\"
 	if !strings.Contains(out, wantOpen) {
-		t.Errorf("Render output missing OSC 8 open sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
+		t.Errorf("Render output missing OSC 8 open+underline sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
 	}
 	if !strings.Contains(out, wantClose) {
-		t.Errorf("Render output missing OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
+		t.Errorf("Render output missing underline-off+OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
 	}
 	if !strings.Contains(out, "Try Conductor") {
 		t.Error("Render output missing 'Try Conductor' text")
@@ -231,13 +231,13 @@ func TestRenderRightWithLinkContainsOsc8(t *testing.T) {
 
 	out := RenderRight(segs, true)
 
-	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\"
-	wantClose := "\033]8;;\033\\"
+	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\\033[4m"
+	wantClose := "\033[24m\033]8;;\033\\"
 	if !strings.Contains(out, wantOpen) {
-		t.Errorf("RenderRight output missing OSC 8 open sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
+		t.Errorf("RenderRight output missing OSC 8 open+underline sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
 	}
 	if !strings.Contains(out, wantClose) {
-		t.Errorf("RenderRight output missing OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
+		t.Errorf("RenderRight output missing underline-off+OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
 	}
 	if !strings.Contains(out, "Try Conductor") {
 		t.Error("RenderRight output missing 'Try Conductor' text")

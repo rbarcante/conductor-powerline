@@ -35,15 +35,15 @@ func ansiResetSep(fg, sep string) string {
 	return fmt.Sprintf("\033[0m\033[38;5;%sm%s\033[0m", fg, sep)
 }
 
-// osc8Open emits the OSC 8 hyperlink opening escape for the given URL.
-// Modern tmux (3.1+) natively understands OSC 8 — no DCS passthrough needed.
+// osc8Open emits the OSC 8 hyperlink opening escape for the given URL
+// with underline enabled to visually indicate a clickable link.
 func osc8Open(url string) string {
-	return fmt.Sprintf("\033]8;;%s\033\\", url)
+	return fmt.Sprintf("\033]8;;%s\033\\\033[4m", url)
 }
 
-// osc8CloseStr emits the OSC 8 hyperlink closing escape.
+// osc8CloseStr emits the OSC 8 hyperlink closing escape and disables underline.
 func osc8CloseStr() string {
-	return "\033]8;;\033\\"
+	return "\033[24m\033]8;;\033\\"
 }
 
 // Render produces an ANSI-colored powerline string from ordered segments.
