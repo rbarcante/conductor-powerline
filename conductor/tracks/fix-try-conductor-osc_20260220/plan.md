@@ -2,11 +2,11 @@
 
 ## Phase 1: Write Failing Tests (Red)
 
-- [ ] Task: Add unit test for `osc8Open()` — assert it returns standard OSC 8 format `\033]8;;URL\033\\` (no DCS wrapping)
-- [ ] Task: Add unit test for `osc8CloseStr()` — assert it returns `\033]8;;\033\\` (no DCS wrapping)
-- [ ] Task: Add unit test for `Render()` with a segment that has a `Link` field — assert output contains OSC 8 open and close sequences wrapping the segment
-- [ ] Task: Add unit test for `RenderRight()` with a segment that has a `Link` field — assert output contains OSC 8 open and close sequences wrapping the segment
-- [ ] Task: Run tests and confirm new tests fail (existing DCS passthrough logic causes mismatch when `$TMUX` is set)
+- [x] Task: Add unit test for `osc8Open()` — assert it returns standard OSC 8 format `\033]8;;URL\033\\` (no DCS wrapping) [b887514]
+- [x] Task: Add unit test for `osc8CloseStr()` — assert it returns `\033]8;;\033\\` (no DCS wrapping) [b887514]
+- [x] Task: Add unit test for `Render()` with a segment that has a `Link` field — assert output contains OSC 8 open and close sequences wrapping the segment [b887514]
+- [x] Task: Add unit test for `RenderRight()` with a segment that has a `Link` field — assert output contains OSC 8 open and close sequences wrapping the segment [b887514]
+- [x] Task: Run tests and confirm new tests fail (existing DCS passthrough logic causes mismatch when `$TMUX` is set) [b887514]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Fix OSC 8 Implementation (Green)
