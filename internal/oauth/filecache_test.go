@@ -3,6 +3,7 @@ package oauth
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -94,6 +95,9 @@ func TestFileCacheGetMissReturnsNil(t *testing.T) {
 }
 
 func TestFileCacheUnwritableDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unwritable directory semantics are not reliable on Windows")
+	}
 	fc := NewFileCache("/nonexistent/path/that/does/not/exist", 1*time.Minute)
 
 	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
