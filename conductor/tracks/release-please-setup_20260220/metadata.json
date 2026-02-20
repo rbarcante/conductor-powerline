@@ -1,0 +1,9 @@
+{
+  "id": "release-please-setup_20260220",
+  "type": "chore",
+  "status": "planned",
+  "priority": "high",
+  "created": "2026-02-20",
+  "branch": "chore/ci-release-setup",
+  "description": "CI/CD and release-please setup"
+}
