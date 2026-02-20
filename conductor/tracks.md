@@ -27,7 +27,7 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
-- [ ] **Track: CI/CD and release-please setup**
+- [x] **Track: CI/CD and release-please setup**
   *Link: [release-please-setup_20260220](./conductor/tracks/release-please-setup_20260220/)*
 - [x] **Track: Fix Try Conductor OSC 8 hyperlink not clickable in tmux**
   *Link: [fix-try-conductor-osc_20260220](./conductor/tracks/fix-try-conductor-osc_20260220/)*
