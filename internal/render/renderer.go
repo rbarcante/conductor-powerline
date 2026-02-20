@@ -2,10 +2,15 @@ package render
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/rbarcante/conductor-powerline/internal/segments"
 )
+
+// inTmux reports whether the process is running inside tmux.
+// Used to skip OSC 8 hyperlinks which Claude Code doesn't forward in tmux.
+var inTmux = os.Getenv("TMUX") != ""
 
 const maxCompactTextLen = 12
 
@@ -64,7 +69,7 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 			text = truncate(text, maxCompactTextLen)
 		}
 
-		if seg.Link != "" {
+		if seg.Link != "" && !inTmux {
 			b.WriteString(osc8Open(seg.Link))
 		}
 
@@ -83,8 +88,14 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 			}
 		}
 
-		if seg.Link != "" {
+		if seg.Link != "" && !inTmux {
 			b.WriteString(osc8CloseStr())
+		}
+
+		// In tmux, append the URL as plain text since Claude Code
+		// doesn't forward OSC 8 hyperlinks inside tmux.
+		if seg.Link != "" && inTmux {
+			b.WriteString(fmt.Sprintf(" \033[38;5;244m%s\033[0m", seg.Link))
 		}
 	}
 
@@ -107,7 +118,7 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 	var b strings.Builder
 
 	for i, seg := range active {
-		if seg.Link != "" {
+		if seg.Link != "" && !inTmux {
 			b.WriteString(osc8Open(seg.Link))
 		}
 
@@ -126,8 +137,12 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 			b.WriteString(ansi256(seg.FG, seg.BG, seg.Text))
 		}
 
-		if seg.Link != "" {
+		if seg.Link != "" && !inTmux {
 			b.WriteString(osc8CloseStr())
+		}
+
+		if seg.Link != "" && inTmux {
+			b.WriteString(fmt.Sprintf(" \033[38;5;244m%s\033[0m", seg.Link))
 		}
 	}
 

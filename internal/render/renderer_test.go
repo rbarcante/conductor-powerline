@@ -197,6 +197,10 @@ func TestOsc8CloseStrReturnsStandardFormat(t *testing.T) {
 }
 
 func TestRenderWithLinkContainsOsc8(t *testing.T) {
+	orig := inTmux
+	inTmux = false
+	defer func() { inTmux = orig }()
+
 	segs := []segments.Segment{
 		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
 	}
@@ -217,6 +221,10 @@ func TestRenderWithLinkContainsOsc8(t *testing.T) {
 }
 
 func TestRenderRightWithLinkContainsOsc8(t *testing.T) {
+	orig := inTmux
+	inTmux = false
+	defer func() { inTmux = orig }()
+
 	segs := []segments.Segment{
 		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
 	}
@@ -233,6 +241,52 @@ func TestRenderRightWithLinkContainsOsc8(t *testing.T) {
 	}
 	if !strings.Contains(out, "Try Conductor") {
 		t.Error("RenderRight output missing 'Try Conductor' text")
+	}
+}
+
+func TestRenderWithLinkInTmuxShowsPlainURL(t *testing.T) {
+	orig := inTmux
+	inTmux = true
+	defer func() { inTmux = orig }()
+
+	segs := []segments.Segment{
+		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
+	}
+
+	out := Render(segs, true, 120)
+
+	// Should NOT contain OSC 8 sequences
+	if strings.Contains(out, "\033]8;;") {
+		t.Error("in tmux: Render should not emit OSC 8 sequences")
+	}
+	// Should contain the URL as plain text
+	if !strings.Contains(out, "https://github.com/rbarcante/claude-conductor") {
+		t.Error("in tmux: Render should include URL as plain text")
+	}
+	if !strings.Contains(out, "Try Conductor") {
+		t.Error("in tmux: Render output missing 'Try Conductor' text")
+	}
+}
+
+func TestRenderRightWithLinkInTmuxShowsPlainURL(t *testing.T) {
+	orig := inTmux
+	inTmux = true
+	defer func() { inTmux = orig }()
+
+	segs := []segments.Segment{
+		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
+	}
+
+	out := RenderRight(segs, true)
+
+	if strings.Contains(out, "\033]8;;") {
+		t.Error("in tmux: RenderRight should not emit OSC 8 sequences")
+	}
+	if !strings.Contains(out, "https://github.com/rbarcante/claude-conductor") {
+		t.Error("in tmux: RenderRight should include URL as plain text")
+	}
+	if !strings.Contains(out, "Try Conductor") {
+		t.Error("in tmux: RenderRight output missing 'Try Conductor' text")
 	}
 }
 
