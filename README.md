@@ -12,36 +12,24 @@ A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Cl
 
 ## Prerequisites
 
-- [Go 1.25+](https://go.dev/dl/) — needed to install from source
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — the statusline hooks into its Notification event
-- A [Nerd Font](https://www.nerdfonts.com/) — optional, falls back to plain text
+- **Go 1.25+** — `brew install go` (macOS) · `sudo apt install golang` (Debian/Ubuntu) · `sudo pacman -S go` (Arch/Manjaro) · [go.dev/dl](https://go.dev/dl/)
+- **Claude Code** — the statusline hooks into its [statusLine setting](https://docs.anthropic.com/en/docs/claude-code)
+- **Nerd Font** *(optional)* — falls back to plain text · [nerdfonts.com](https://www.nerdfonts.com/)
 
 ## Quick start
 
-```bash
-go install github.com/rbarcante/conductor-powerline@latest
-```
-
-Add to your Claude Code settings (`.claude/settings.json`):
+Add to `~/.claude/settings.json`:
 
 ```json
 {
-  "hooks": {
-    "Notification": [
-      {
-        "type": "command",
-        "command": "echo '$CLAUDE_NOTIFICATION' | conductor-powerline"
-      }
-    ]
+  "statusLine": {
+    "type": "command",
+    "command": "go run github.com/rbarcante/conductor-powerline@latest"
   }
 }
 ```
 
-Test it:
-
-```bash
-echo '{"model":"claude-sonnet-4-20250514"}' | conductor-powerline
-```
+That's it — restart Claude Code and the powerline appears in your statusline.
 
 ## Segments
 
