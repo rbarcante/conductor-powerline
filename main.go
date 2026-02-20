@@ -55,9 +55,15 @@ func run() error {
 	theme, _ := themes.Get(cfg.Theme)
 
 	// 4. Detect conductor status once (used for right segments and line 2 visibility)
+	// Prefer hookData.WorkspacePath() (explicit project from Claude Code hook JSON) with
+	// os.Getwd() as fallback for local config loading.
 	cwd, _ := os.Getwd()
-	conductorStatus := segments.DetectConductorStatus("", cwd)
-	debug.Logf("main", "conductor status: %d", conductorStatus)
+	workspace := hookData.WorkspacePath()
+	if workspace == "" {
+		workspace = cwd
+	}
+	conductorStatus := segments.DetectConductorStatus("", workspace)
+	debug.Logf("main", "conductor status: %d (workspace=%s)", conductorStatus, workspace)
 
 	// 5. Fetch usage data and workflow data concurrently
 	var usageData *oauth.UsageData
@@ -87,7 +93,7 @@ func run() error {
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.APITimeout.Duration)
 			defer cancel()
 			home, _ := os.UserHomeDir()
-			data, err := segments.FetchWorkflowStatus(ctx, home, cwd)
+			data, err := segments.FetchWorkflowStatus(ctx, home, workspace)
 			if err == nil {
 				workflowData = data
 			} else {
