@@ -15,3 +15,4 @@ Add a second powerline line that displays real-time Conductor workflow status wh
 - [Specification](spec.md)
 - [Implementation Plan](plan.md)
 - [Decisions](decisions.md)
+- [Code Review Report](./review.md) - Auto-generated review on track completion
