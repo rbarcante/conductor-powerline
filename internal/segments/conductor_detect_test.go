@@ -1,74 +1,143 @@
 package segments
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func TestDetectConductorPluginFound_Plugins(t *testing.T) {
+// makeRegistry writes a minimal installed_plugins.json to base/.claude/plugins/
+func makeRegistry(t *testing.T, base string, plugins map[string]any) {
+	t.Helper()
+	dir := filepath.Join(base, ".claude", "plugins")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	type registryFile struct {
+		Version int            `json:"version"`
+		Plugins map[string]any `json:"plugins"`
+	}
+	data, err := json.Marshal(registryFile{Version: 2, Plugins: plugins})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "installed_plugins.json"), data, 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// --- Strategy 1: installed_plugins.json registry ---
+
+func TestDetectConductorPlugin_RegistryFound(t *testing.T) {
+	base := t.TempDir()
+	makeRegistry(t, base, map[string]any{
+		"claude-conductor@some-marketplace": []any{},
+	})
+	if !DetectConductorPlugin(base) {
+		t.Error("expected true when installed_plugins.json contains claude-conductor key")
+	}
+}
+
+func TestDetectConductorPlugin_RegistryFoundOtherPlugins(t *testing.T) {
+	base := t.TempDir()
+	// Registry has other plugins but NOT conductor
+	makeRegistry(t, base, map[string]any{
+		"context7@claude-plugins-official":   []any{},
+		"frontend-design@claude-plugins-official": []any{},
+	})
+	if DetectConductorPlugin(base) {
+		t.Error("expected false when registry contains no claude-conductor key")
+	}
+}
+
+func TestDetectConductorPlugin_RegistryMalformed(t *testing.T) {
+	base := t.TempDir()
+	dir := filepath.Join(base, ".claude", "plugins")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Write invalid JSON — should fall through to next strategy
+	if err := os.WriteFile(filepath.Join(dir, "installed_plugins.json"), []byte("not json"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	// No other locations exist — should return false without panicking
+	if DetectConductorPlugin(base) {
+		t.Error("expected false for malformed registry with no other detection paths")
+	}
+}
+
+// --- Strategy 2: plugins/cache directory scan ---
+
+func TestDetectConductorPlugin_CacheFound(t *testing.T) {
+	base := t.TempDir()
+	cacheDir := filepath.Join(base, ".claude", "plugins", "cache", "some-marketplace", "claude-conductor")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if !DetectConductorPlugin(base) {
+		t.Error("expected true when cache/marketplace/claude-conductor dir exists")
+	}
+}
+
+func TestDetectConductorPlugin_CacheOtherPluginsOnly(t *testing.T) {
+	base := t.TempDir()
+	// Other plugins in cache but not conductor
+	otherDir := filepath.Join(base, ".claude", "plugins", "cache", "some-marketplace", "other-plugin")
+	if err := os.MkdirAll(otherDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if DetectConductorPlugin(base) {
+		t.Error("expected false when cache has no claude-conductor dir")
+	}
+}
+
+// --- Strategy 3: legacy flat directories ---
+
+func TestDetectConductorPlugin_LegacyPluginsDir(t *testing.T) {
 	base := t.TempDir()
 	pluginDir := filepath.Join(base, ".claude", "plugins", "claude-conductor")
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-
 	if !DetectConductorPlugin(base) {
-		t.Error("expected DetectConductorPlugin to return true when plugin dir exists in plugins/")
+		t.Error("expected true for legacy plugins/claude-conductor dir")
 	}
 }
 
-func TestDetectConductorPluginFound_Marketplace(t *testing.T) {
+func TestDetectConductorPlugin_LegacyMarketplaceDir(t *testing.T) {
 	base := t.TempDir()
 	marketDir := filepath.Join(base, ".claude", "marketplace", "claude-conductor")
 	if err := os.MkdirAll(marketDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-
 	if !DetectConductorPlugin(base) {
-		t.Error("expected DetectConductorPlugin to return true when plugin dir exists in marketplace/")
+		t.Error("expected true for legacy marketplace/claude-conductor dir")
 	}
 }
 
-func TestDetectConductorPluginNotFound(t *testing.T) {
+// --- Not found cases ---
+
+func TestDetectConductorPlugin_NotFound(t *testing.T) {
 	base := t.TempDir()
-	// Create .claude dir but no claude-conductor subdirectory
+	// .claude exists but no conductor anywhere
 	if err := os.MkdirAll(filepath.Join(base, ".claude", "plugins"), 0755); err != nil {
 		t.Fatal(err)
 	}
-
 	if DetectConductorPlugin(base) {
-		t.Error("expected DetectConductorPlugin to return false when no claude-conductor dir exists")
+		t.Error("expected false when no claude-conductor is found anywhere")
 	}
 }
 
-func TestDetectConductorPluginNoDotClaude(t *testing.T) {
+func TestDetectConductorPlugin_NoDotClaude(t *testing.T) {
 	base := t.TempDir()
-	// No .claude directory at all
-
 	if DetectConductorPlugin(base) {
-		t.Error("expected DetectConductorPlugin to return false when .claude dir doesn't exist")
+		t.Error("expected false when .claude dir doesn't exist")
 	}
 }
 
-func TestDetectConductorPluginEmptyBaseUsesHomeDir(t *testing.T) {
-	// Passing empty string should use os.UserHomeDir() — just verify it doesn't panic
-	// and returns a bool. We can't control the actual home dir in tests.
+func TestDetectConductorPlugin_EmptyBaseUsesHomeDir(t *testing.T) {
+	// Smoke test: passing "" should use os.UserHomeDir() without panicking
 	result := DetectConductorPlugin("")
-	_ = result // either true or false depending on the test environment
-}
-
-func TestDetectConductorPluginBothLocations(t *testing.T) {
-	base := t.TempDir()
-	// Both locations exist — should return true
-	if err := os.MkdirAll(filepath.Join(base, ".claude", "plugins", "claude-conductor"), 0755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(filepath.Join(base, ".claude", "marketplace", "claude-conductor"), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	if !DetectConductorPlugin(base) {
-		t.Error("expected DetectConductorPlugin to return true when both locations exist")
-	}
+	_ = result
 }
