@@ -7,103 +7,109 @@ import (
 	"github.com/rbarcante/conductor-powerline/internal/themes"
 )
 
+func TestConductorActive(t *testing.T) {
+	theme, _ := themes.Get("dark")
+	seg := Conductor(ConductorActive, true, theme)
+
+	if !seg.Enabled {
+		t.Error("expected segment enabled")
+	}
+	if seg.Name != "conductor" {
+		t.Errorf("expected name 'conductor', got %q", seg.Name)
+	}
+	if !strings.Contains(seg.Text, "✓") || !strings.Contains(seg.Text, "Conductor") {
+		t.Errorf("expected '✓ Conductor', got %q", seg.Text)
+	}
+	if strings.Contains(seg.Text, "\033]8;;") {
+		t.Error("expected no OSC 8 hyperlink for active state")
+	}
+	colors := theme.Segments["conductor"]
+	if seg.FG != colors.FG || seg.BG != colors.BG {
+		t.Errorf("expected conductor colors, got FG=%q BG=%q", seg.FG, seg.BG)
+	}
+}
+
+func TestConductorActiveNoNerdFonts(t *testing.T) {
+	theme, _ := themes.Get("dark")
+	seg := Conductor(ConductorActive, false, theme)
+
+	if !strings.Contains(seg.Text, "OK Conductor") {
+		t.Errorf("expected 'OK Conductor' without nerd fonts, got %q", seg.Text)
+	}
+}
+
 func TestConductorInstalled(t *testing.T) {
 	theme, _ := themes.Get("dark")
-	seg := Conductor(true, true, theme)
+	seg := Conductor(ConductorInstalled, true, theme)
 
-	if !seg.Enabled {
-		t.Error("expected segment enabled when plugin is detected")
+	if !strings.Contains(seg.Text, "Setup Conductor") {
+		t.Errorf("expected 'Setup Conductor', got %q", seg.Text)
 	}
-	if seg.Name != "conductor" {
-		t.Errorf("expected name 'conductor', got %q", seg.Name)
-	}
-	if !strings.Contains(seg.Text, "Conductor") {
-		t.Errorf("expected text to contain 'Conductor', got %q", seg.Text)
-	}
-	// Should not contain OSC 8 hyperlink when installed
 	if strings.Contains(seg.Text, "\033]8;;") {
-		t.Error("expected no OSC 8 hyperlink when plugin is installed")
+		t.Error("expected no OSC 8 hyperlink for installed state")
 	}
-	// Should use conductor (success) colors
-	colors := theme.Segments["conductor"]
-	if seg.FG != colors.FG {
-		t.Errorf("expected FG %q, got %q", colors.FG, seg.FG)
-	}
-	if seg.BG != colors.BG {
-		t.Errorf("expected BG %q, got %q", colors.BG, seg.BG)
-	}
-}
-
-func TestConductorNotInstalled(t *testing.T) {
-	theme, _ := themes.Get("dark")
-	seg := Conductor(false, true, theme)
-
-	if !seg.Enabled {
-		t.Error("expected segment enabled when plugin is NOT detected (shows prompt)")
-	}
-	if seg.Name != "conductor" {
-		t.Errorf("expected name 'conductor', got %q", seg.Name)
-	}
-	if !strings.Contains(seg.Text, "Conductor") {
-		t.Errorf("expected text to contain 'Conductor', got %q", seg.Text)
-	}
-	// Should contain OSC 8 hyperlink when not installed
-	if !strings.Contains(seg.Text, "\033]8;;https://github.com/rbarcante/claude-conductor") {
-		t.Errorf("expected OSC 8 hyperlink in text, got %q", seg.Text)
-	}
-	// Should use conductor_missing (warning) colors
 	colors := theme.Segments["conductor_missing"]
-	if seg.FG != colors.FG {
-		t.Errorf("expected FG %q, got %q", colors.FG, seg.FG)
-	}
-	if seg.BG != colors.BG {
-		t.Errorf("expected BG %q, got %q", colors.BG, seg.BG)
-	}
-}
-
-func TestConductorInstalledNerdFonts(t *testing.T) {
-	theme, _ := themes.Get("dark")
-	seg := Conductor(true, true, theme)
-
-	// With Nerd Fonts, should use checkmark icon
-	if !strings.Contains(seg.Text, "✓") {
-		t.Errorf("expected checkmark icon with nerd fonts, got %q", seg.Text)
+	if seg.FG != colors.FG || seg.BG != colors.BG {
+		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
 	}
 }
 
 func TestConductorInstalledNoNerdFonts(t *testing.T) {
 	theme, _ := themes.Get("dark")
-	seg := Conductor(true, false, theme)
+	seg := Conductor(ConductorInstalled, false, theme)
 
-	if !seg.Enabled {
-		t.Error("expected segment enabled")
+	if !strings.Contains(seg.Text, "Setup Conductor") {
+		t.Errorf("expected 'Setup Conductor', got %q", seg.Text)
 	}
-	// Without Nerd Fonts, should still show Conductor text
-	if !strings.Contains(seg.Text, "Conductor") {
-		t.Errorf("expected text to contain 'Conductor', got %q", seg.Text)
-	}
-}
-
-func TestConductorMissingNerdFonts(t *testing.T) {
-	theme, _ := themes.Get("dark")
-	seg := Conductor(false, true, theme)
-
-	// With Nerd Fonts, should use lightning bolt icon
-	if !strings.Contains(seg.Text, "⚡") {
-		t.Errorf("expected lightning icon with nerd fonts, got %q", seg.Text)
+	if strings.Contains(seg.Text, "⚡") {
+		t.Error("expected no lightning icon without nerd fonts")
 	}
 }
 
-func TestConductorMissingNoNerdFonts(t *testing.T) {
+func TestConductorMarketplace(t *testing.T) {
 	theme, _ := themes.Get("dark")
-	seg := Conductor(false, false, theme)
+	seg := Conductor(ConductorMarketplace, true, theme)
 
-	if !seg.Enabled {
-		t.Error("expected segment enabled")
+	if !strings.Contains(seg.Text, "Install Conductor") {
+		t.Errorf("expected 'Install Conductor', got %q", seg.Text)
 	}
-	// Without Nerd Fonts, should still show prompt text with hyperlink
+	if strings.Contains(seg.Text, "\033]8;;") {
+		t.Error("expected no OSC 8 hyperlink for marketplace state")
+	}
+	colors := theme.Segments["conductor_missing"]
+	if seg.FG != colors.FG || seg.BG != colors.BG {
+		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
+	}
+}
+
+func TestConductorNone(t *testing.T) {
+	theme, _ := themes.Get("dark")
+	seg := Conductor(ConductorNone, true, theme)
+
 	if !strings.Contains(seg.Text, "\033]8;;https://github.com/rbarcante/claude-conductor") {
-		t.Errorf("expected OSC 8 hyperlink in text, got %q", seg.Text)
+		t.Errorf("expected OSC 8 hyperlink for none state, got %q", seg.Text)
+	}
+	if !strings.Contains(seg.Text, "Try Conductor") {
+		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
+	}
+	if seg.VisualText == "" {
+		t.Error("expected VisualText to be set for OSC 8 link")
+	}
+	colors := theme.Segments["conductor_missing"]
+	if seg.FG != colors.FG || seg.BG != colors.BG {
+		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
+	}
+}
+
+func TestConductorNoneNoNerdFonts(t *testing.T) {
+	theme, _ := themes.Get("dark")
+	seg := Conductor(ConductorNone, false, theme)
+
+	if !strings.Contains(seg.Text, "Try Conductor") {
+		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
+	}
+	if strings.Contains(seg.Text, "⚡") {
+		t.Error("expected no lightning icon without nerd fonts")
 	}
 }
 
@@ -116,20 +122,20 @@ func TestConductorThemeColorsAllThemes(t *testing.T) {
 				t.Fatalf("theme %q not found", name)
 			}
 
-			// Installed state uses conductor colors
-			seg := Conductor(true, true, theme)
+			// Active uses conductor colors
+			seg := Conductor(ConductorActive, true, theme)
 			colors := theme.Segments["conductor"]
 			if seg.FG != colors.FG || seg.BG != colors.BG {
-				t.Errorf("installed: wrong colors for theme %q: got FG=%q BG=%q, want FG=%q BG=%q",
-					name, seg.FG, seg.BG, colors.FG, colors.BG)
+				t.Errorf("active: wrong colors for theme %q", name)
 			}
 
-			// Missing state uses conductor_missing colors
-			seg = Conductor(false, true, theme)
-			colors = theme.Segments["conductor_missing"]
-			if seg.FG != colors.FG || seg.BG != colors.BG {
-				t.Errorf("missing: wrong colors for theme %q: got FG=%q BG=%q, want FG=%q BG=%q",
-					name, seg.FG, seg.BG, colors.FG, colors.BG)
+			// All non-active states use conductor_missing colors
+			for _, status := range []ConductorStatus{ConductorInstalled, ConductorMarketplace, ConductorNone} {
+				seg = Conductor(status, true, theme)
+				colors = theme.Segments["conductor_missing"]
+				if seg.FG != colors.FG || seg.BG != colors.BG {
+					t.Errorf("status %d: wrong colors for theme %q", status, name)
+				}
 			}
 		})
 	}

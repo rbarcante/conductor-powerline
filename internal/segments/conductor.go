@@ -14,16 +14,19 @@ func osc8Link(url, text string) string {
 	return fmt.Sprintf("\033]8;;%s\033\\%s\033]8;;\033\\", url, text)
 }
 
-// Conductor returns a segment indicating whether the claude-conductor plugin is installed.
-// When detected is true, it shows a success indicator with conductor theme colors.
-// When detected is false, it shows a prompt with an OSC 8 hyperlink and conductor_missing colors.
-func Conductor(detected bool, nerdFonts bool, theme themes.Theme) Segment {
-	if detected {
+// Conductor returns a segment reflecting the conductor plugin status.
+//
+// States:
+//   - ConductorActive:      "✓ Conductor"        (green — fully set up)
+//   - ConductorInstalled:   "⚡ Setup Conductor"  (yellow — plugin installed, project needs setup)
+//   - ConductorMarketplace: "⚡ Install Conductor" (yellow — marketplace present, plugin not installed)
+//   - ConductorNone:        "⚡ Try Conductor"     (yellow — nothing installed, OSC 8 link)
+func Conductor(status ConductorStatus, nerdFonts bool, theme themes.Theme) Segment {
+	switch status {
+	case ConductorActive:
 		colors := theme.Segments["conductor"]
-		var text string
-		if nerdFonts {
-			text = "✓ Conductor"
-		} else {
+		text := "✓ Conductor"
+		if !nerdFonts {
 			text = "OK Conductor"
 		}
 		return Segment{
@@ -33,21 +36,48 @@ func Conductor(detected bool, nerdFonts bool, theme themes.Theme) Segment {
 			BG:      colors.BG,
 			Enabled: true,
 		}
-	}
 
-	colors := theme.Segments["conductor_missing"]
-	var label string
-	if nerdFonts {
-		label = "⚡ Get Conductor"
-	} else {
-		label = "Get Conductor"
-	}
-	return Segment{
-		Name:       "conductor",
-		Text:       osc8Link(conductorURL, label),
-		VisualText: label,
-		FG:         colors.FG,
-		BG:         colors.BG,
-		Enabled:    true,
+	case ConductorInstalled:
+		colors := theme.Segments["conductor_missing"]
+		label := "⚡ Setup Conductor"
+		if !nerdFonts {
+			label = "Setup Conductor"
+		}
+		return Segment{
+			Name:    "conductor",
+			Text:    label,
+			FG:      colors.FG,
+			BG:      colors.BG,
+			Enabled: true,
+		}
+
+	case ConductorMarketplace:
+		colors := theme.Segments["conductor_missing"]
+		label := "⚡ Install Conductor"
+		if !nerdFonts {
+			label = "Install Conductor"
+		}
+		return Segment{
+			Name:    "conductor",
+			Text:    label,
+			FG:      colors.FG,
+			BG:      colors.BG,
+			Enabled: true,
+		}
+
+	default: // ConductorNone
+		colors := theme.Segments["conductor_missing"]
+		label := "⚡ Try Conductor"
+		if !nerdFonts {
+			label = "Try Conductor"
+		}
+		return Segment{
+			Name:       "conductor",
+			Text:       osc8Link(conductorURL, label),
+			VisualText: label,
+			FG:         colors.FG,
+			BG:         colors.BG,
+			Enabled:    true,
+		}
 	}
 }

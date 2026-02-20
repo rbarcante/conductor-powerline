@@ -7,54 +7,55 @@ import (
 	"strings"
 )
 
+// ConductorStatus represents the detection state of the conductor plugin.
+type ConductorStatus int
+
+const (
+	// ConductorNone means neither the plugin nor the marketplace is present.
+	ConductorNone ConductorStatus = iota
+	// ConductorMarketplace means the marketplace dir exists but the plugin
+	// is not registered in installed_plugins.json.
+	ConductorMarketplace
+	// ConductorInstalled means the plugin is in installed_plugins.json
+	// but no conductor/ folder exists in the current project.
+	ConductorInstalled
+	// ConductorActive means the plugin is installed AND the current project
+	// has a conductor/ directory (fully set up).
+	ConductorActive
+)
+
 // installedPluginsFile is the registry file Claude Code maintains for installed plugins.
 type installedPluginsFile struct {
 	Plugins map[string]json.RawMessage `json:"plugins"`
 }
 
-// DetectConductorPlugin checks whether the claude-conductor plugin is installed
-// in the user's Claude Code plugin directories. It accepts a base directory for
-// testability; pass an empty string to use the real home directory.
-//
-// Detection strategy (in order):
-//  1. Parse <base>/.claude/plugins/installed_plugins.json — look for any key
-//     containing "claude-conductor" (e.g. "claude-conductor@some-marketplace")
-//  2. Scan <base>/.claude/plugins/cache/**/claude-conductor/ directories
-//  3. Legacy: check <base>/.claude/plugins/claude-conductor/ or
-//     <base>/.claude/marketplace/claude-conductor/
-func DetectConductorPlugin(baseDir string) bool {
+// DetectConductorStatus checks the conductor plugin installation state.
+// baseDir is the user's home directory (empty string uses os.UserHomeDir).
+// projectDir is the current working directory to check for a conductor/ folder.
+func DetectConductorStatus(baseDir string, projectDir string) ConductorStatus {
 	if baseDir == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return false
+			return ConductorNone
 		}
 		baseDir = home
 	}
 
 	claudeDir := filepath.Join(baseDir, ".claude")
 
-	// Strategy 1: parse installed_plugins.json
-	if detectViaRegistry(claudeDir) {
-		return true
-	}
-
-	// Strategy 2: scan plugins/cache for claude-conductor directories
-	if detectViaCache(claudeDir) {
-		return true
-	}
-
-	// Strategy 3: legacy flat-directory layout
-	legacy := []string{
-		filepath.Join(claudeDir, "plugins", "claude-conductor"),
-		filepath.Join(claudeDir, "marketplace", "claude-conductor"),
-	}
-	for _, loc := range legacy {
-		if _, err := os.Stat(loc); err == nil {
-			return true
+	inRegistry := detectViaRegistry(claudeDir)
+	if inRegistry {
+		if projectHasConductor(projectDir) {
+			return ConductorActive
 		}
+		return ConductorInstalled
 	}
 
-	return false
+	if marketplaceExists(claudeDir) {
+		return ConductorMarketplace
+	}
+
+	return ConductorNone
 }
 
 func detectViaRegistry(claudeDir string) bool {
@@ -70,7 +71,6 @@ func detectViaRegistry(claudeDir string) bool {
 	}
 
 	for key := range registry.Plugins {
-		// Keys look like "claude-conductor@marketplace-name"
 		if strings.HasPrefix(key, "claude-conductor") {
 			return true
 		}
@@ -78,33 +78,22 @@ func detectViaRegistry(claudeDir string) bool {
 	return false
 }
 
-func detectViaCache(claudeDir string) bool {
-	// Check both cache/<marketplace>/claude-conductor/ and
-	// marketplaces/claude-conductor/ (the layout used by local marketplace installs).
-	scanDirs := []string{
-		filepath.Join(claudeDir, "plugins", "cache"),
-		filepath.Join(claudeDir, "plugins", "marketplaces"),
-	}
-
-	for _, scanDir := range scanDirs {
-		entries, err := os.ReadDir(scanDir)
-		if err != nil {
-			continue
-		}
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-			// marketplaces/claude-conductor/ — direct match
-			if entry.Name() == "claude-conductor" {
-				return true
-			}
-			// cache/<marketplace>/claude-conductor/ — one level deeper
-			pluginDir := filepath.Join(scanDir, entry.Name(), "claude-conductor")
-			if _, err := os.Stat(pluginDir); err == nil {
-				return true
-			}
-		}
+func marketplaceExists(claudeDir string) bool {
+	marketDir := filepath.Join(claudeDir, "plugins", "marketplaces", "claude-conductor")
+	if _, err := os.Stat(marketDir); err == nil {
+		return true
 	}
 	return false
+}
+
+func projectHasConductor(projectDir string) bool {
+	if projectDir == "" {
+		return false
+	}
+	condDir := filepath.Join(projectDir, "conductor")
+	info, err := os.Stat(condDir)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }

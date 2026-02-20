@@ -166,8 +166,9 @@ func buildRightSegments(cfg config.Config, hookData hook.Data, theme themes.Them
 	// Conductor segment (rightmost — after context)
 	condCfg, hasCfg := cfg.Segments["conductor"]
 	if !hasCfg || condCfg.Enabled {
-		detected := segments.DetectConductorPlugin("")
-		seg := segments.Conductor(detected, cfg.Display.NerdFontsEnabled(), theme)
+		cwd, _ := os.Getwd()
+		status := segments.DetectConductorStatus("", cwd)
+		seg := segments.Conductor(status, cfg.Display.NerdFontsEnabled(), theme)
 		result = append(result, seg)
 	}
 
