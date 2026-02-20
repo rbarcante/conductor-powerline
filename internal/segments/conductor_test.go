@@ -77,6 +77,10 @@ func TestConductorNone(t *testing.T) {
 	if !strings.Contains(seg.Text, "Try Conductor") {
 		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
 	}
+	// Should contain OSC 8 hyperlink
+	if !strings.Contains(seg.Text, "\033]8;;https://github.com/rbarcante/claude-conductor") {
+		t.Errorf("expected OSC 8 hyperlink, got %q", seg.Text)
+	}
 	colors := theme.Segments["conductor_missing"]
 	if seg.FG != colors.FG || seg.BG != colors.BG {
 		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
@@ -87,8 +91,12 @@ func TestConductorNoneNoNerdFonts(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorNone, false, theme)
 
-	if seg.Text != "Try Conductor" {
+	if !strings.Contains(seg.Text, "Try Conductor") {
 		t.Errorf("expected 'Try Conductor', got %q", seg.Text)
+	}
+	// OSC 8 link present even without nerd fonts
+	if !strings.Contains(seg.Text, "\033]8;;") {
+		t.Errorf("expected OSC 8 hyperlink, got %q", seg.Text)
 	}
 }
 
