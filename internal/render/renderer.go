@@ -50,11 +50,7 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 	for i, seg := range active {
 		text := seg.Text
 		if compact {
-			displayText := seg.Text
-			if seg.VisualText != "" {
-				displayText = seg.VisualText
-			}
-			text = truncate(displayText, maxCompactTextLen)
+			text = truncate(text, maxCompactTextLen)
 		}
 
 		if nerdFonts {
@@ -126,11 +122,7 @@ func filterEnabled(segs []segments.Segment) []segments.Segment {
 func shouldCompact(segs []segments.Segment, termWidth int) bool {
 	totalLen := 0
 	for _, s := range segs {
-		visualText := s.Text
-		if s.VisualText != "" {
-			visualText = s.VisualText
-		}
-		totalLen += len([]rune(visualText)) + 3 // text + padding + separator
+		totalLen += len([]rune(s.Text)) + 3 // text + padding + separator
 	}
 	return totalLen > termWidth
 }
