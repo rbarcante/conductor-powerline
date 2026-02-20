@@ -335,7 +335,7 @@ print(json.dumps(data))
 	cmd.Dir = projectDir
 	cmd.Env = append(os.Environ(),
 		"HOME="+fakeHome,
-		"USERPROFILE="+fakeHome, // Windows uses USERPROFILE for os.UserHomeDir()
+		"USERPROFILE="+fakeHome,       // Windows uses USERPROFILE for os.UserHomeDir()
 		"XDG_CACHE_HOME="+t.TempDir(), // isolate cache
 	)
 	out, err := cmd.Output()
