@@ -16,3 +16,4 @@ The "Try Conductor" segment's OSC 8 hyperlink renders as non-clickable plain tex
 - [plan.md](./plan.md) — Implementation plan
 - [decisions.md](./decisions.md) — Architectural decisions
 - [metadata.json](./metadata.json) — Track metadata
+- [Code Review Report](./review.md) - Auto-generated review on track completion
