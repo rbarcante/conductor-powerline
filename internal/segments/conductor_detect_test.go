@@ -80,6 +80,18 @@ func TestDetectConductorPlugin_CacheFound(t *testing.T) {
 	}
 }
 
+func TestDetectConductorPlugin_MarketplacesDir(t *testing.T) {
+	base := t.TempDir()
+	// ~/.claude/plugins/marketplaces/claude-conductor/ — local marketplace layout
+	marketDir := filepath.Join(base, ".claude", "plugins", "marketplaces", "claude-conductor")
+	if err := os.MkdirAll(marketDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if !DetectConductorPlugin(base) {
+		t.Error("expected true when plugins/marketplaces/claude-conductor dir exists")
+	}
+}
+
 func TestDetectConductorPlugin_CacheOtherPluginsOnly(t *testing.T) {
 	base := t.TempDir()
 	// Other plugins in cache but not conductor

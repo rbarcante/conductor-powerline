@@ -79,19 +79,31 @@ func detectViaRegistry(claudeDir string) bool {
 }
 
 func detectViaCache(claudeDir string) bool {
-	cacheDir := filepath.Join(claudeDir, "plugins", "cache")
-	marketplaces, err := os.ReadDir(cacheDir)
-	if err != nil {
-		return false
+	// Check both cache/<marketplace>/claude-conductor/ and
+	// marketplaces/claude-conductor/ (the layout used by local marketplace installs).
+	scanDirs := []string{
+		filepath.Join(claudeDir, "plugins", "cache"),
+		filepath.Join(claudeDir, "plugins", "marketplaces"),
 	}
 
-	for _, marketplace := range marketplaces {
-		if !marketplace.IsDir() {
+	for _, scanDir := range scanDirs {
+		entries, err := os.ReadDir(scanDir)
+		if err != nil {
 			continue
 		}
-		pluginDir := filepath.Join(cacheDir, marketplace.Name(), "claude-conductor")
-		if _, err := os.Stat(pluginDir); err == nil {
-			return true
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			// marketplaces/claude-conductor/ — direct match
+			if entry.Name() == "claude-conductor" {
+				return true
+			}
+			// cache/<marketplace>/claude-conductor/ — one level deeper
+			pluginDir := filepath.Join(scanDir, entry.Name(), "claude-conductor")
+			if _, err := os.Stat(pluginDir); err == nil {
+				return true
+			}
 		}
 	}
 	return false
