@@ -10,6 +10,12 @@ A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Cl
 - macOS Keychain, Linux secret-tool, Windows Credential Manager
 - Silent failure — never crashes or pollutes your shell
 
+## Prerequisites
+
+- [Go 1.25+](https://go.dev/dl/) — needed to install from source
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — the statusline hooks into its Notification event
+- A [Nerd Font](https://www.nerdfonts.com/) — optional, falls back to plain text
+
 ## Quick start
 
 ```bash
