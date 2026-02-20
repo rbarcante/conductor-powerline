@@ -1,5 +1,8 @@
 # conductor-powerline
 
+[![CI](https://github.com/rbarcante/conductor-powerline/actions/workflows/ci.yml/badge.svg)](https://github.com/rbarcante/conductor-powerline/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rbarcante/conductor-powerline)](https://github.com/rbarcante/conductor-powerline/releases/latest)
+
 A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It displays model info, git status, API usage (block/weekly), and context window usage with Nerd Font glyphs and configurable color themes.
 
 ## Features
