@@ -218,7 +218,9 @@ func buildRightSegments(cfg config.Config, conductorStatus segments.ConductorSta
 	condCfg, hasCfg := cfg.Segments["conductor"]
 	if !hasCfg || condCfg.Enabled {
 		seg := segments.Conductor(conductorStatus, cfg.Display.NerdFontsEnabled(), theme)
-		result = append(result, seg)
+		if seg.Enabled {
+			result = append(result, seg)
+		}
 	}
 
 	return result

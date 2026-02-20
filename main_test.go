@@ -224,9 +224,13 @@ func TestIntegrationConductorSegmentPresent(t *testing.T) {
 		t.Fatalf("build failed: %v\n%s", err, out)
 	}
 
+	// Use an isolated HOME so conductor plugin is guaranteed not installed,
+	// which produces ConductorNone → segment shown in line 1.
+	fakeHome := t.TempDir()
 	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
+	cmd.Env = append(os.Environ(), "HOME="+fakeHome, "USERPROFILE="+fakeHome)
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("run failed: %v", err)
@@ -234,9 +238,9 @@ func TestIntegrationConductorSegmentPresent(t *testing.T) {
 
 	output := string(out)
 
-	// Conductor segment should always appear (either installed or not-installed state)
+	// Conductor segment should appear in line 1 only when not installed (ConductorNone/Marketplace)
 	if !strings.Contains(output, "Conductor") {
-		t.Errorf("expected 'Conductor' segment in output, got: %q", output)
+		t.Errorf("expected 'Conductor' segment in output for uninstalled state, got: %q", output)
 	}
 }
 

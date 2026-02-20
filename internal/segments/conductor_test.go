@@ -11,21 +11,11 @@ func TestConductorActive(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorActive, true, theme)
 
-	if !seg.Enabled {
-		t.Error("expected segment enabled")
+	if seg.Enabled {
+		t.Error("expected segment disabled for ConductorActive (shown on line 2 instead)")
 	}
 	if seg.Name != "conductor" {
 		t.Errorf("expected name 'conductor', got %q", seg.Name)
-	}
-	if seg.Text != "✓ Conductor" {
-		t.Errorf("expected '✓ Conductor', got %q", seg.Text)
-	}
-	if seg.Link != "" {
-		t.Errorf("expected no link for active state, got %q", seg.Link)
-	}
-	colors := theme.Segments["conductor"]
-	if seg.FG != colors.FG || seg.BG != colors.BG {
-		t.Errorf("expected conductor colors, got FG=%q BG=%q", seg.FG, seg.BG)
 	}
 }
 
@@ -33,8 +23,8 @@ func TestConductorActiveNoNerdFonts(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorActive, false, theme)
 
-	if seg.Text != "OK Conductor" {
-		t.Errorf("expected 'OK Conductor', got %q", seg.Text)
+	if seg.Enabled {
+		t.Error("expected segment disabled for ConductorActive regardless of nerd fonts")
 	}
 }
 
@@ -42,12 +32,11 @@ func TestConductorInstalled(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorInstalled, true, theme)
 
-	if !strings.Contains(seg.Text, "Setup Conductor") {
-		t.Errorf("expected 'Setup Conductor', got %q", seg.Text)
+	if seg.Enabled {
+		t.Error("expected segment disabled for ConductorInstalled (plugin present, no project setup)")
 	}
-	colors := theme.Segments["conductor_missing"]
-	if seg.FG != colors.FG || seg.BG != colors.BG {
-		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
+	if seg.Name != "conductor" {
+		t.Errorf("expected name 'conductor', got %q", seg.Name)
 	}
 }
 
@@ -55,8 +44,8 @@ func TestConductorInstalledNoNerdFonts(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorInstalled, false, theme)
 
-	if seg.Text != "Setup Conductor" {
-		t.Errorf("expected 'Setup Conductor', got %q", seg.Text)
+	if seg.Enabled {
+		t.Error("expected segment disabled for ConductorInstalled regardless of nerd fonts")
 	}
 }
 
@@ -110,17 +99,18 @@ func TestConductorThemeColorsAllThemes(t *testing.T) {
 				t.Fatalf("theme %q not found", name)
 			}
 
-			// Active uses conductor colors
-			seg := Conductor(ConductorActive, true, theme)
-			colors := theme.Segments["conductor"]
-			if seg.FG != colors.FG || seg.BG != colors.BG {
-				t.Errorf("active: wrong colors for theme %q", name)
+			// Active and Installed are disabled (no line-1 segment)
+			for _, status := range []ConductorStatus{ConductorActive, ConductorInstalled} {
+				seg := Conductor(status, true, theme)
+				if seg.Enabled {
+					t.Errorf("status %d: expected disabled for theme %q", status, name)
+				}
 			}
 
-			// All non-active states use conductor_missing colors
-			for _, status := range []ConductorStatus{ConductorInstalled, ConductorMarketplace, ConductorNone} {
-				seg = Conductor(status, true, theme)
-				colors = theme.Segments["conductor_missing"]
+			// Marketplace and None use conductor_missing colors
+			for _, status := range []ConductorStatus{ConductorMarketplace, ConductorNone} {
+				seg := Conductor(status, true, theme)
+				colors := theme.Segments["conductor_missing"]
 				if seg.FG != colors.FG || seg.BG != colors.BG {
 					t.Errorf("status %d: wrong colors for theme %q", status, name)
 				}
