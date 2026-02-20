@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/rbarcante/conductor-powerline/compare/v1.0.0...v1.1.0) (2026-02-20)
+
+
+### Features
+
+* add theme screenshots to README and fix conductor plugin detection ([3ee3e73](https://github.com/rbarcante/conductor-powerline/commit/3ee3e734087bb8da38bea94b45f8c440f873ae06))
+
+
+### Bug Fixes
+
+* **test:** update conductor detect tests to match new registry key format ([1554a62](https://github.com/rbarcante/conductor-powerline/commit/1554a62427ba9b4b14aad6756bb6fa441e36b199))
+
 ## 1.0.0 (2026-02-20)
 
 
