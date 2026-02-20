@@ -177,6 +177,65 @@ func TestLeftArrowSymbolsDefined(t *testing.T) {
 	}
 }
 
+// --- Tests for OSC 8 hyperlink helpers ---
+
+func TestOsc8OpenReturnsStandardFormat(t *testing.T) {
+	url := "https://example.com"
+	got := osc8Open(url)
+	want := "\033]8;;https://example.com\033\\"
+	if got != want {
+		t.Errorf("osc8Open(%q) = %q, want %q", url, got, want)
+	}
+}
+
+func TestOsc8CloseStrReturnsStandardFormat(t *testing.T) {
+	got := osc8CloseStr()
+	want := "\033]8;;\033\\"
+	if got != want {
+		t.Errorf("osc8CloseStr() = %q, want %q", got, want)
+	}
+}
+
+func TestRenderWithLinkContainsOsc8(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
+	}
+
+	out := Render(segs, true, 120)
+
+	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\"
+	wantClose := "\033]8;;\033\\"
+	if !strings.Contains(out, wantOpen) {
+		t.Errorf("Render output missing OSC 8 open sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
+	}
+	if !strings.Contains(out, wantClose) {
+		t.Errorf("Render output missing OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
+	}
+	if !strings.Contains(out, "Try Conductor") {
+		t.Error("Render output missing 'Try Conductor' text")
+	}
+}
+
+func TestRenderRightWithLinkContainsOsc8(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "try", Text: "Try Conductor", FG: "15", BG: "57", Enabled: true, Link: "https://github.com/rbarcante/claude-conductor"},
+	}
+
+	out := RenderRight(segs, true)
+
+	wantOpen := "\033]8;;https://github.com/rbarcante/claude-conductor\033\\"
+	wantClose := "\033]8;;\033\\"
+	if !strings.Contains(out, wantOpen) {
+		t.Errorf("RenderRight output missing OSC 8 open sequence.\ngot: %q\nwant substring: %q", out, wantOpen)
+	}
+	if !strings.Contains(out, wantClose) {
+		t.Errorf("RenderRight output missing OSC 8 close sequence.\ngot: %q\nwant substring: %q", out, wantClose)
+	}
+	if !strings.Contains(out, "Try Conductor") {
+		t.Error("RenderRight output missing 'Try Conductor' text")
+	}
+}
+
 func TestRenderSegmentOrder(t *testing.T) {
 	segs := []segments.Segment{
 		{Name: "model", Text: "Opus", FG: "15", BG: "57", Enabled: true},
