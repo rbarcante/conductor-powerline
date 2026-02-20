@@ -48,7 +48,7 @@ func TestDetect_Active(t *testing.T) {
 	base := t.TempDir()
 	project := t.TempDir()
 	makeRegistry(t, base, map[string]any{
-		"claude-conductor@some-marketplace": []any{},
+		"conductor@claude-conductor": []any{},
 	})
 	makeProjectConductor(t, project)
 
@@ -64,7 +64,7 @@ func TestDetect_Installed(t *testing.T) {
 	base := t.TempDir()
 	project := t.TempDir() // no conductor/ dir
 	makeRegistry(t, base, map[string]any{
-		"claude-conductor@some-marketplace": []any{},
+		"conductor@claude-conductor": []any{},
 	})
 
 	status := DetectConductorStatus(base, project)
@@ -76,7 +76,7 @@ func TestDetect_Installed(t *testing.T) {
 func TestDetect_InstalledEmptyProject(t *testing.T) {
 	base := t.TempDir()
 	makeRegistry(t, base, map[string]any{
-		"claude-conductor@some-marketplace": []any{},
+		"conductor@claude-conductor": []any{},
 	})
 
 	// Empty project dir string
@@ -168,7 +168,7 @@ func TestDetect_ProjectConductorIsFile(t *testing.T) {
 	base := t.TempDir()
 	project := t.TempDir()
 	makeRegistry(t, base, map[string]any{
-		"claude-conductor@some-marketplace": []any{},
+		"conductor@claude-conductor": []any{},
 	})
 	// conductor exists but is a file, not a directory
 	if err := os.WriteFile(filepath.Join(project, "conductor"), []byte("not a dir"), 0644); err != nil {
