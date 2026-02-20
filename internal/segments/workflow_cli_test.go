@@ -62,7 +62,7 @@ func TestFetchWorkflowStatusSuccess(t *testing.T) {
 	fakeHome := makeFakeCLI(t)
 
 	ctx := context.Background()
-	data, err := FetchWorkflowStatus(ctx, fakeHome)
+	data, err := FetchWorkflowStatus(ctx, fakeHome, t.TempDir())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestFetchWorkflowStatusSuccess(t *testing.T) {
 func TestFetchWorkflowStatusCLINotFound(t *testing.T) {
 	ctx := context.Background()
 	// Use a non-existent home dir so FindConductorCLI returns ""
-	_, err := FetchWorkflowStatus(ctx, t.TempDir())
+	_, err := FetchWorkflowStatus(ctx, t.TempDir(), t.TempDir())
 	if err == nil {
 		t.Error("expected error when CLI not found")
 	}
@@ -105,7 +105,7 @@ func TestFetchWorkflowStatusCLIFailure(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	_, err := FetchWorkflowStatus(ctx, fakeHome)
+	_, err := FetchWorkflowStatus(ctx, fakeHome, t.TempDir())
 	if err == nil {
 		t.Error("expected error when CLI exits non-zero")
 	}
@@ -122,7 +122,7 @@ func TestFetchWorkflowStatusTimeout(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
-	_, err := FetchWorkflowStatus(ctx, fakeHome)
+	_, err := FetchWorkflowStatus(ctx, fakeHome, t.TempDir())
 	if err == nil {
 		t.Error("expected error on timeout")
 	}
@@ -133,7 +133,7 @@ func TestFetchWorkflowStatusMalformedJSON(t *testing.T) {
 	fakeHome := makeFakeCLI(t)
 
 	ctx := context.Background()
-	_, err := FetchWorkflowStatus(ctx, fakeHome)
+	_, err := FetchWorkflowStatus(ctx, fakeHome, t.TempDir())
 	if err == nil {
 		t.Error("expected error for malformed JSON")
 	}
@@ -144,7 +144,7 @@ func TestFetchWorkflowStatusSuccessFalse(t *testing.T) {
 	fakeHome := makeFakeCLI(t)
 
 	ctx := context.Background()
-	_, err := FetchWorkflowStatus(ctx, fakeHome)
+	_, err := FetchWorkflowStatus(ctx, fakeHome, t.TempDir())
 	if err == nil {
 		t.Error("expected error when success=false")
 	}

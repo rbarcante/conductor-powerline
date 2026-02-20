@@ -87,7 +87,7 @@ func run() error {
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.APITimeout.Duration)
 			defer cancel()
 			home, _ := os.UserHomeDir()
-			data, err := segments.FetchWorkflowStatus(ctx, home)
+			data, err := segments.FetchWorkflowStatus(ctx, home, cwd)
 			if err == nil {
 				workflowData = data
 			} else {

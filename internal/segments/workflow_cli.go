@@ -76,9 +76,10 @@ func FindConductorCLI(homeDir string) string {
 	return matches[len(matches)-1]
 }
 
-// FetchWorkflowStatus executes conductor_cli.py --json status and returns parsed data.
-// Returns nil, error if the CLI is not found, fails, times out, or returns malformed JSON.
-func FetchWorkflowStatus(ctx context.Context, homeDir string) (*WorkflowData, error) {
+// FetchWorkflowStatus executes conductor_cli.py --json status in the given project directory
+// and returns parsed data. workDir must be the project's workspace path so the CLI reads the
+// correct conductor/ folder. Returns nil, error if the CLI is not found, fails, or times out.
+func FetchWorkflowStatus(ctx context.Context, homeDir string, workDir string) (*WorkflowData, error) {
 	start := time.Now()
 
 	cliPath := FindConductorCLI(homeDir)
@@ -86,9 +87,10 @@ func FetchWorkflowStatus(ctx context.Context, homeDir string) (*WorkflowData, er
 		return nil, fmt.Errorf("conductor_cli.py not found")
 	}
 
-	debug.Logf("workflow_cli", "executing: python3 %s --json status", cliPath)
+	debug.Logf("workflow_cli", "executing: python3 %s --json status (dir=%s)", cliPath, workDir)
 
 	cmd := execCommandFunc(ctx, "python3", cliPath, "--json", "status")
+	cmd.Dir = workDir
 	out, err := cmd.Output()
 	duration := time.Since(start)
 	if err != nil {
