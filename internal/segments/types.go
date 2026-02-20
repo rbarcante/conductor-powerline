@@ -5,6 +5,7 @@ package segments
 type Segment struct {
 	Name    string
 	Text    string
+	Link    string // Optional: URL for OSC 8 hyperlink wrapping the entire segment.
 	FG      string
 	BG      string
 	Enabled bool

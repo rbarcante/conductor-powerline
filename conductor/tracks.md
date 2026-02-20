@@ -24,6 +24,9 @@ OAuth token retrieval from all platform credential stores and Anthropic API call
 
 
 
+
+- [x] **Track: Detect conductor plugin and suggest installation**
+  *Link: [detect-conductor-plugin-suggest_20260219](./conductor/tracks/detect-conductor-plugin-suggest_20260219/)*
 - [x] **Track: Fix cross-project cache contamination**
   *Link: [fix-cross-project-cache_20260219](./conductor/tracks/fix-cross-project-cache_20260219/)*
 - [x] **Track: Use context_window.used_percentage from Claude Code statusline JSON**

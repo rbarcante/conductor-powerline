@@ -206,6 +206,63 @@ func TestIntegrationContextWindowAbsent(t *testing.T) {
 	}
 }
 
+func TestIntegrationConductorSegmentPresent(t *testing.T) {
+	binPath := t.TempDir() + "/conductor-powerline"
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// Conductor segment should always appear (either installed or not-installed state)
+	if !strings.Contains(output, "Conductor") {
+		t.Errorf("expected 'Conductor' segment in output, got: %q", output)
+	}
+}
+
+func TestIntegrationConductorSegmentDisabled(t *testing.T) {
+	binPath := t.TempDir() + "/conductor-powerline"
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	// Write a project config that disables the conductor segment
+	cfgDir := t.TempDir()
+	cfgPath := cfgDir + "/.conductor-powerline.json"
+	cfg := `{"segments":{"conductor":{"enabled":false}}}`
+	if err := os.WriteFile(cfgPath, []byte(cfg), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Dir = cfgDir // run from dir with config file
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// Conductor segment should NOT appear when disabled
+	if strings.Contains(output, "Conductor") {
+		t.Errorf("expected no 'Conductor' segment when disabled, got: %q", output)
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }

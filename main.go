@@ -98,7 +98,8 @@ func run() error {
 
 // rightSideSegments lists segment names that render on the right side.
 var rightSideSegments = map[string]bool{
-	"context": true,
+	"context":   true,
+	"conductor": true,
 }
 
 func buildSegments(cfg config.Config, hookData hook.Data, theme themes.Theme, usageData *oauth.UsageData) []segments.Segment {
@@ -151,14 +152,25 @@ func cacheDir() string {
 }
 
 func buildRightSegments(cfg config.Config, hookData hook.Data, theme themes.Theme) []segments.Segment {
-	segCfg, hasCfg := cfg.Segments["context"]
-	if hasCfg && !segCfg.Enabled {
-		return nil
+	var result []segments.Segment
+
+	// Context segment (leftmost right-side segment)
+	ctxCfg, hasCfg := cfg.Segments["context"]
+	if !hasCfg || ctxCfg.Enabled {
+		seg := segments.Context(hookData.ContextPercent(), cfg.Display.NerdFontsEnabled(), theme)
+		if seg.Enabled {
+			result = append(result, seg)
+		}
 	}
 
-	seg := segments.Context(hookData.ContextPercent(), cfg.Display.NerdFontsEnabled(), theme)
-	if !seg.Enabled {
-		return nil
+	// Conductor segment (rightmost — after context)
+	condCfg, hasCfg := cfg.Segments["conductor"]
+	if !hasCfg || condCfg.Enabled {
+		cwd, _ := os.Getwd()
+		status := segments.DetectConductorStatus("", cwd)
+		seg := segments.Conductor(status, cfg.Display.NerdFontsEnabled(), theme)
+		result = append(result, seg)
 	}
-	return []segments.Segment{seg}
+
+	return result
 }
