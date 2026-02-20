@@ -44,9 +44,9 @@ type usageBucket struct {
 
 // apiResponse mirrors the JSON structure from the Anthropic OAuth usage endpoint.
 type apiResponse struct {
-	FiveHour      *usageBucket `json:"five_hour"`
-	SevenDay      *usageBucket `json:"seven_day"`
-	SevenDayOpus  *usageBucket `json:"seven_day_opus"`
+	FiveHour       *usageBucket `json:"five_hour"`
+	SevenDay       *usageBucket `json:"seven_day"`
+	SevenDayOpus   *usageBucket `json:"seven_day_opus"`
 	SevenDaySonnet *usageBucket `json:"seven_day_sonnet"`
 }
 
@@ -67,7 +67,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		debug.Logf("api", "HTTP error: %v", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	debug.Logf("api", "HTTP status: %d", resp.StatusCode)
 

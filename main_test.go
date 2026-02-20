@@ -3,13 +3,22 @@ package main
 import (
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 )
 
+func binName() string {
+	name := "conductor-powerline"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	return name
+}
+
 func TestIntegrationPipeStdin(t *testing.T) {
 	// Build the binary
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {
@@ -45,7 +54,7 @@ func TestIntegrationPipeStdin(t *testing.T) {
 }
 
 func TestIntegrationEmptyStdin(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build failed: %v\n%s", err, out)
@@ -70,7 +79,7 @@ func TestIntegrationEmptyStdin(t *testing.T) {
 }
 
 func TestIntegrationMalformedStdin(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build failed: %v\n%s", err, out)
@@ -99,7 +108,7 @@ func TestIntegrationMalformedStdin(t *testing.T) {
 
 func TestIntegrationClaudeCodeSchema(t *testing.T) {
 	// Build the binary
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {
@@ -142,7 +151,7 @@ func TestIntegrationClaudeCodeSchema(t *testing.T) {
 }
 
 func TestIntegrationContextWindowSegment(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {
@@ -182,7 +191,7 @@ func TestIntegrationContextWindowSegment(t *testing.T) {
 }
 
 func TestIntegrationContextWindowAbsent(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {
@@ -207,7 +216,7 @@ func TestIntegrationContextWindowAbsent(t *testing.T) {
 }
 
 func TestIntegrationConductorSegmentPresent(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {
@@ -231,7 +240,7 @@ func TestIntegrationConductorSegmentPresent(t *testing.T) {
 }
 
 func TestIntegrationConductorSegmentDisabled(t *testing.T) {
-	binPath := t.TempDir() + "/conductor-powerline"
+	binPath := t.TempDir() + "/" + binName()
 	build := exec.Command("go", "build", "-o", binPath, ".")
 	build.Dir = "."
 	if out, err := build.CombinedOutput(); err != nil {

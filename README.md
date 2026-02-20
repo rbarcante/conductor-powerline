@@ -1,80 +1,55 @@
 # conductor-powerline
 
-A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It displays model info, git status, API usage (block/weekly), and context window usage with Nerd Font glyphs and configurable color themes.
+[![CI](https://github.com/rbarcante/conductor-powerline/actions/workflows/ci.yml/badge.svg)](https://github.com/rbarcante/conductor-powerline/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/rbarcante/conductor-powerline)](https://github.com/rbarcante/conductor-powerline/releases/latest)
 
-## Features
+A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-- **Powerline rendering** with Nerd Font arrow separators (or plain-text fallback)
-- **Live API usage** via Claude Code's OAuth token (macOS Keychain, Linux secret-tool, Windows Credential Manager)
-- **6 built-in themes**: dark, light, nord, gruvbox, tokyo-night, rose-pine
-- **Context window** usage indicator with threshold colors
-- **Conductor plugin detection** with "Try Conductor" prompt and hyperlink
-- **Configurable segments**: directory, git, model, block (5h), weekly (7d), context, conductor
-- **Zero dependencies** outside the Go standard library
-- **Silent failure** — never crashes or pollutes your shell
+- Model info, git branch, directory, API usage (5h block / 7d rolling), context window
+- 6 built-in themes — dark, light, nord, gruvbox, tokyo-night, rose-pine
+- Nerd Font glyphs (with plain-text fallback)
+- macOS Keychain, Linux secret-tool, Windows Credential Manager
+- Silent failure — never crashes or pollutes your shell
 
-## Installation
+## Prerequisites
 
-```bash
-go install github.com/rbarcante/conductor-powerline@latest
-```
+- **Go 1.25+** — `brew install go` (macOS) · `sudo apt install golang` (Debian/Ubuntu) · `sudo pacman -S go` (Arch/Manjaro) · [go.dev/dl](https://go.dev/dl/)
+- **Claude Code** — the statusline hooks into its [statusLine setting](https://docs.anthropic.com/en/docs/claude-code)
+- **Nerd Font** *(optional)* — falls back to plain text · [nerdfonts.com](https://www.nerdfonts.com/)
 
-Or build from source:
+## Quick start
 
-```bash
-git clone https://github.com/rbarcante/conductor-powerline.git
-cd conductor-powerline
-make build
-```
-
-## Usage
-
-conductor-powerline reads Claude Code hook JSON from stdin and outputs ANSI-colored powerline text to stdout. Configure it as a Claude Code hook:
+Add to `~/.claude/settings.json`:
 
 ```json
 {
-  "hooks": {
-    "Notification": [
-      {
-        "type": "command",
-        "command": "echo '$CLAUDE_NOTIFICATION' | conductor-powerline"
-      }
-    ]
+  "statusLine": {
+    "type": "command",
+    "command": "go run github.com/rbarcante/conductor-powerline@latest"
   }
 }
 ```
 
-### Quick test
-
-```bash
-echo '{"model":"claude-sonnet-4-20250514"}' | conductor-powerline
-```
+That's it — restart Claude Code and the powerline appears in your statusline.
 
 ## Segments
 
-| Segment | Position | Description |
-|---------|----------|-------------|
-| `directory` | left | Current project/directory name |
-| `git` | left | Branch name with dirty-state indicator |
-| `model` | left | Active Claude model (Opus, Sonnet, Haiku) |
-| `block` | left | 5-hour block usage percentage and time remaining |
-| `weekly` | left | 7-day rolling usage percentage |
-| `context` | right | Context window usage with threshold colors |
-| `conductor` | right | Conductor plugin status with "Try Conductor" hyperlink |
-
-### Hyperlinks
-
-The `conductor` segment includes an OSC 8 hyperlink when displaying "Try Conductor". Outside tmux, the text is underlined and clickable. Inside tmux, the URL is shown as plain text instead, since Claude Code does not currently forward OSC 8 hyperlinks in tmux ([tracking issue](https://github.com/anthropics/claude-code/issues/27047)).
+| Segment | Description |
+|---------|-------------|
+| `directory` | Current project/directory name |
+| `git` | Branch name with dirty-state indicator |
+| `model` | Active Claude model (Opus, Sonnet, Haiku) |
+| `block` | 5-hour block usage percentage and time remaining |
+| `weekly` | 7-day rolling usage percentage |
+| `context` | Context window usage with threshold colors |
+| `conductor` | Conductor plugin status / "Try Conductor" hyperlink |
 
 ## Configuration
 
-Configuration is loaded in order (later overrides earlier):
+Loaded in order (later overrides earlier):
 
-1. **Defaults** (built-in)
-2. **User config**: `~/.claude/conductor-powerline.json`
-3. **Project config**: `./.conductor-powerline.json`
-
-### Example config
+1. Built-in defaults
+2. User config: `~/.claude/conductor-powerline.json`
+3. Project config: `./.conductor-powerline.json`
 
 ```json
 {
@@ -99,37 +74,28 @@ Configuration is loaded in order (later overrides earlier):
 }
 ```
 
-### Config fields
-
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `theme` | string | `"dark"` | Color theme name |
 | `display.nerdFonts` | bool | `true` | Use Nerd Font glyphs |
 | `display.compactWidth` | int | `100` | Truncate segments when total width exceeds this |
 | `segments.<name>.enabled` | bool | `true` | Enable/disable individual segments |
-| `segmentOrder` | []string | see below | Order of segments left-to-right |
+| `segmentOrder` | []string | *(all)* | Order of segments left-to-right |
 | `apiTimeout` | duration | `"5s"` | HTTP timeout for usage API |
 | `cacheTTL` | duration | `"30s"` | Cache lifetime for API responses |
 | `trendThreshold` | float | `2.0` | Percentage change threshold for trend arrows |
 
-Default segment order: `directory`, `git`, `model`, `block`, `weekly`, `context`, `conductor`
-
-### Themes
-
-Available themes: `dark`, `light`, `nord`, `gruvbox`, `tokyo-night`, `rose-pine`
+Themes: `dark` `light` `nord` `gruvbox` `tokyo-night` `rose-pine`
 
 ## tmux
 
-conductor-powerline works inside tmux. For best results:
+Works inside tmux. For OSC 8 hyperlink support (tmux 3.1+), add to `.tmux.conf`:
 
-- **tmux 3.1+** is required for OSC 8 hyperlink support
-- Add to your `.tmux.conf`:
-  ```
-  set -as terminal-features ",*:hyperlinks"
-  ```
-- Restart tmux after adding the config (`tmux kill-server`)
+```
+set -as terminal-features ",*:hyperlinks"
+```
 
-**Note:** Hyperlinks in the conductor segment are currently not clickable when rendered through Claude Code's statusline inside tmux due to a Claude Code limitation. The URL is displayed as plain text instead. Outside tmux, hyperlinks are underlined and clickable.
+> **Note:** Hyperlinks in the conductor segment are not clickable inside tmux due to a [Claude Code limitation](https://github.com/anthropics/claude-code/issues/27047). The URL is shown as plain text instead.
 
 ## Development
 
@@ -139,6 +105,14 @@ make test-coverage # Generate HTML coverage report
 make lint          # Run golangci-lint
 make fmt           # Format code
 make vet           # Run go vet
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/rbarcante/conductor-powerline.git
+cd conductor-powerline
+make build
 ```
 
 ## License

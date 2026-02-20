@@ -40,7 +40,7 @@ func TestLogf_Disabled(t *testing.T) {
 }
 
 func TestLogf_DisabledByDefault(t *testing.T) {
-	os.Unsetenv("CONDUCTOR_DEBUG")
+	_ = os.Unsetenv("CONDUCTOR_DEBUG")
 	Init()
 
 	var buf bytes.Buffer

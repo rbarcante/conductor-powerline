@@ -77,7 +77,7 @@ func (fc *FileCache) cleanup() {
 			continue
 		}
 		if time.Since(info.ModTime()) > cleanupMaxAge {
-			os.Remove(filepath.Join(fc.dir, e.Name()))
+			_ = os.Remove(filepath.Join(fc.dir, e.Name()))
 		}
 	}
 }

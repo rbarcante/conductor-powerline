@@ -30,5 +30,5 @@ func Logf(tag, format string, args ...any) {
 		return
 	}
 	msg := fmt.Sprintf(format, args...)
-	fmt.Fprintf(output, "[conductor:%s] %s\n", tag, msg)
+	_, _ = fmt.Fprintf(output, "[conductor:%s] %s\n", tag, msg)
 }
