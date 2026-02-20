@@ -89,35 +89,35 @@ var registry = map[string]Theme{
 	"tokyo-night": {
 		Name: "tokyo-night",
 		Segments: map[string]SegmentColors{
-			"directory":         {FG: "147", BG: "60"},  // #82aaff / #2f334d
-			"git":               {FG: "193", BG: "59"},  // #c3e88d / #1e2030
-			"model":             {FG: "219", BG: "23"},  // #fca7ea / #191b29
-			"block":             {FG: "111", BG: "59"},  // #7aa2f7 / #2d3748
-			"weekly":            {FG: "116", BG: "59"},  // #4fd6be / #1a202c
-			"opus":              {FG: "183", BG: "59"},  // #bb9af7 / #1a202c
-			"sonnet":            {FG: "117", BG: "59"},  // #7dcfff / #1a202c
-			"context":           {FG: "111", BG: "59"},  // #7aa2f7 / #2d3748
-			"warning":           {FG: "59", BG: "180"},  // #1a1b26 / #e0af68
-			"critical":          {FG: "59", BG: "211"},  // #1a1b26 / #f7768e
-			"conductor":         {FG: "193", BG: "23"},  // #c3e88d / #191b29
-			"conductor_missing": {FG: "59", BG: "180"},  // #1a1b26 / #e0af68
+			"directory":         {FG: "147", BG: "60"}, // #82aaff / #2f334d
+			"git":               {FG: "193", BG: "59"}, // #c3e88d / #1e2030
+			"model":             {FG: "219", BG: "23"}, // #fca7ea / #191b29
+			"block":             {FG: "111", BG: "59"}, // #7aa2f7 / #2d3748
+			"weekly":            {FG: "116", BG: "59"}, // #4fd6be / #1a202c
+			"opus":              {FG: "183", BG: "59"}, // #bb9af7 / #1a202c
+			"sonnet":            {FG: "117", BG: "59"}, // #7dcfff / #1a202c
+			"context":           {FG: "111", BG: "59"}, // #7aa2f7 / #2d3748
+			"warning":           {FG: "59", BG: "180"}, // #1a1b26 / #e0af68
+			"critical":          {FG: "59", BG: "211"}, // #1a1b26 / #f7768e
+			"conductor":         {FG: "193", BG: "23"}, // #c3e88d / #191b29
+			"conductor_missing": {FG: "59", BG: "180"}, // #1a1b26 / #e0af68
 		},
 	},
 	"rose-pine": {
 		Name: "rose-pine",
 		Segments: map[string]SegmentColors{
-			"directory":         {FG: "183", BG: "59"},  // #c4a7e7 / #26233a
-			"git":               {FG: "152", BG: "59"},  // #9ccfd8 / #1f1d2e
-			"model":             {FG: "224", BG: "17"},  // #ebbcba / #191724
-			"block":             {FG: "211", BG: "59"},  // #eb6f92 / #2a273f
-			"weekly":            {FG: "152", BG: "59"},  // #9ccfd8 / #232136
-			"opus":              {FG: "183", BG: "59"},  // #c4a7e7 / #232136
-			"sonnet":            {FG: "67", BG: "59"},   // #31748f / #232136
-			"context":           {FG: "152", BG: "59"},  // #9ccfd8 / #2a273f
-			"warning":           {FG: "17", BG: "222"},  // #191724 / #f6c177
-			"critical":          {FG: "17", BG: "211"},  // #191724 / #eb6f92
-			"conductor":         {FG: "152", BG: "17"},  // #9ccfd8 / #191724
-			"conductor_missing": {FG: "17", BG: "222"},  // #191724 / #f6c177
+			"directory":         {FG: "183", BG: "59"}, // #c4a7e7 / #26233a
+			"git":               {FG: "152", BG: "59"}, // #9ccfd8 / #1f1d2e
+			"model":             {FG: "224", BG: "17"}, // #ebbcba / #191724
+			"block":             {FG: "211", BG: "59"}, // #eb6f92 / #2a273f
+			"weekly":            {FG: "152", BG: "59"}, // #9ccfd8 / #232136
+			"opus":              {FG: "183", BG: "59"}, // #c4a7e7 / #232136
+			"sonnet":            {FG: "67", BG: "59"},  // #31748f / #232136
+			"context":           {FG: "152", BG: "59"}, // #9ccfd8 / #2a273f
+			"warning":           {FG: "17", BG: "222"}, // #191724 / #f6c177
+			"critical":          {FG: "17", BG: "211"}, // #191724 / #eb6f92
+			"conductor":         {FG: "152", BG: "17"}, // #9ccfd8 / #191724
+			"conductor_missing": {FG: "17", BG: "222"}, // #191724 / #f6c177
 		},
 	},
 }

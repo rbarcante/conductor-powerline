@@ -18,7 +18,7 @@ var wincredCommandRunner = runWincredCommand
 func getWincredToken() (string, error) {
 	output, err := wincredCommandRunner(
 		"-Command",
-		"(Get-StoredCredential -Target '" + wincredTargetName + "').Password | ConvertFrom-SecureString -AsPlainText",
+		"(Get-StoredCredential -Target '"+wincredTargetName+"').Password | ConvertFrom-SecureString -AsPlainText",
 	)
 	if err != nil {
 		return "", err

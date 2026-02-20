@@ -9,9 +9,9 @@ import (
 
 // ContextWindowUsage holds token usage counts from the context window.
 type ContextWindowUsage struct {
-	InputTokens                int `json:"input_tokens"`
-	CacheCreationInputTokens   int `json:"cache_creation_input_tokens"`
-	CacheReadInputTokens       int `json:"cache_read_input_tokens"`
+	InputTokens              int `json:"input_tokens"`
+	CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
+	CacheReadInputTokens     int `json:"cache_read_input_tokens"`
 }
 
 // ContextWindow holds context window data from Claude Code's hook JSON.
