@@ -2,14 +2,10 @@ package render
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/rbarcante/conductor-powerline/internal/segments"
 )
-
-// inTmux reports whether the process is running inside tmux.
-var inTmux = os.Getenv("TMUX") != ""
 
 const maxCompactTextLen = 12
 
@@ -35,21 +31,13 @@ func ansiResetSep(fg, sep string) string {
 }
 
 // osc8Open emits the OSC 8 hyperlink opening escape for the given URL.
-// Inside tmux, wraps in DCS passthrough so the outer terminal receives it.
+// Modern tmux (3.1+) natively understands OSC 8 — no DCS passthrough needed.
 func osc8Open(url string) string {
-	if inTmux {
-		// DCS passthrough: \ePtmux; + escaped sequence (double each ESC) + ST
-		return fmt.Sprintf("\033Ptmux;\033\033]8;;%s\033\033\\\033\\", url)
-	}
 	return fmt.Sprintf("\033]8;;%s\033\\", url)
 }
 
 // osc8CloseStr emits the OSC 8 hyperlink closing escape.
-// Inside tmux, wraps in DCS passthrough.
 func osc8CloseStr() string {
-	if inTmux {
-		return "\033Ptmux;\033\033]8;;\033\033\\\033\\"
-	}
 	return "\033]8;;\033\\"
 }
 
