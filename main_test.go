@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -285,24 +286,24 @@ func TestIntegrationWorkflowSecondLine(t *testing.T) {
 	// ConductorActive is detected. We also need a fake conductor_cli.py that
 	// outputs valid status JSON.
 	projectDir := t.TempDir()
-	conductorDir := projectDir + "/conductor"
+	conductorDir := filepath.Join(projectDir, "conductor")
 	if err := os.MkdirAll(conductorDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create fake installed_plugins.json in a fake home dir
 	fakeHome := t.TempDir()
-	pluginDir := fakeHome + "/.claude/plugins"
+	pluginDir := filepath.Join(fakeHome, ".claude", "plugins")
 	if err := os.MkdirAll(pluginDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	pluginsJSON := `{"plugins":{"conductor@claude-conductor":{}}}`
-	if err := os.WriteFile(pluginDir+"/installed_plugins.json", []byte(pluginsJSON), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pluginDir, "installed_plugins.json"), []byte(pluginsJSON), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create fake conductor_cli.py that outputs valid status JSON
-	cliDir := fakeHome + "/.claude/plugins/cache/claude-conductor/conductor/1.0.0/scripts"
+	cliDir := filepath.Join(fakeHome, ".claude", "plugins", "cache", "claude-conductor", "conductor", "1.0.0", "scripts")
 	if err := os.MkdirAll(cliDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -322,16 +323,19 @@ data = {
 }
 print(json.dumps(data))
 `
-	if err := os.WriteFile(cliDir+"/conductor_cli.py", []byte(cliScript), 0755); err != nil {
+	if err := os.WriteFile(filepath.Join(cliDir, "conductor_cli.py"), []byte(cliScript), 0755); err != nil {
 		t.Fatal(err)
 	}
 
-	input := `{"model":"claude-opus-4-6","workspace":"` + projectDir + `"}`
+	// Escape backslashes in projectDir for JSON embedding (Windows paths)
+	escapedProjectDir := strings.ReplaceAll(projectDir, `\`, `\\`)
+	input := `{"model":"claude-opus-4-6","workspace":"` + escapedProjectDir + `"}`
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
 	cmd.Dir = projectDir
 	cmd.Env = append(os.Environ(),
 		"HOME="+fakeHome,
+		"USERPROFILE="+fakeHome, // Windows uses USERPROFILE for os.UserHomeDir()
 		"XDG_CACHE_HOME="+t.TempDir(), // isolate cache
 	)
 	out, err := cmd.Output()
