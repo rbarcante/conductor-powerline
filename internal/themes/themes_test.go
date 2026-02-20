@@ -23,6 +23,7 @@ func TestThemeSegmentColors(t *testing.T) {
 		"block", "weekly", "opus", "sonnet", "context",
 		"warning", "critical",
 		"conductor", "conductor_missing",
+		"workflow_setup", "workflow_track", "workflow_tasks", "workflow_overall",
 	}
 
 	for _, name := range expectedThemes {
