@@ -171,7 +171,7 @@ func TestFileCacheCleanupRemovesOldFiles(t *testing.T) {
 	for i, e := range entries {
 		if i < 2 {
 			path := filepath.Join(dir, e.Name())
-			os.Chtimes(path, oldTime, oldTime)
+			_ = os.Chtimes(path, oldTime, oldTime)
 		}
 	}
 

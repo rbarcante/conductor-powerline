@@ -19,7 +19,7 @@ func TestClientSuccessfulResponse(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 72.5},
 			"seven_day": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 45.0},
 			"seven_day_opus": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 30.0},
@@ -78,7 +78,7 @@ func TestClientHTTPError(t *testing.T) {
 func TestClientMalformedJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{not valid json`))
+		_, _ = w.Write([]byte(`{not valid json`))
 	}))
 	defer server.Close()
 
@@ -94,7 +94,7 @@ func TestClientNullBuckets(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		// Real API returns null for opus when not used
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 18.0},
 			"seven_day": {"resets_at": "2026-02-23T00:00:00Z", "utilization": 14.0},
 			"seven_day_opus": null,
@@ -125,7 +125,7 @@ func TestClientPartialResponse(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		// Only five_hour present
-		w.Write([]byte(`{"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 50.0}}`))
+		_, _ = w.Write([]byte(`{"five_hour": {"resets_at": "2026-02-19T18:00:00Z", "utilization": 50.0}}`))
 	}))
 	defer server.Close()
 
@@ -147,7 +147,7 @@ func TestClientMalformedResetsAt(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"five_hour": {"resets_at": "not-a-date", "utilization": 60.0},
 			"seven_day": {"resets_at": "also-invalid", "utilization": 30.0}
 		}`))

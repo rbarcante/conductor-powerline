@@ -67,7 +67,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		debug.Logf("api", "HTTP error: %v", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	debug.Logf("api", "HTTP status: %d", resp.StatusCode)
 
