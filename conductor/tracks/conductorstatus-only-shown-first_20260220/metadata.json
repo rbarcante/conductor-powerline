@@ -2,7 +2,8 @@
   "track_id": "conductorstatus-only-shown-first_20260220",
   "description": "conductorStatus must only be shown in the first line if not installed",
   "type": "feature",
-  "status": "active",
+  "status": "completed",
   "created": "2026-02-20",
-  "branch": "feature/conductor-status-line1-only"
+  "branch": "feature/conductor-status-line1-only",
+  "updated_at": "2026-02-20T18:57:59.831793Z"
 }
