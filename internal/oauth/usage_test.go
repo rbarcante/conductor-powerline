@@ -8,11 +8,13 @@ import (
 
 // mockFetcher implements UsageFetcher for testing.
 type mockFetcher struct {
-	data *UsageData
-	err  error
+	data   *UsageData
+	err    error
+	called bool
 }
 
 func (m *mockFetcher) FetchUsageData(token string) (*UsageData, error) {
+	m.called = true
 	return m.data, m.err
 }
 
@@ -62,7 +64,7 @@ func TestFetchUsageFreshFetch(t *testing.T) {
 	}
 }
 
-func TestFetchUsageCacheHit(t *testing.T) {
+func TestFetchUsageCacheHitSkipsAPI(t *testing.T) {
 	fetcher := &mockFetcher{
 		data: &UsageData{BlockPercentage: 99.0},
 	}
@@ -77,17 +79,22 @@ func TestFetchUsageCacheHit(t *testing.T) {
 	defer func() { tokenGetter = origTokenGetter }()
 	tokenGetter = func() (string, error) { return "test-token", nil }
 
-	// FetchUsage should try API and get fresh data
+	// Fresh cache should be returned without calling API
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err != nil {
 		t.Fatalf("expected data, got error: %v", err)
 	}
-	// Should have fetched new data from API
-	if data.BlockPercentage != 99.0 {
-		t.Errorf("expected fresh API data 99.0, got %f", data.BlockPercentage)
+	if data.BlockPercentage != 50.0 {
+		t.Errorf("expected cached data 50.0, got %f", data.BlockPercentage)
+	}
+	if fetcher.called {
+		t.Error("expected API to NOT be called when cache is fresh")
 	}
 }
 
+// TestFetchUsageStaleFallback verifies that when cache has expired (IsStale=true,
+// simulating what FileCache.Get() does when TTL has elapsed) and the API fails,
+// FetchUsage returns the stale cached data rather than an error.
 func TestFetchUsageStaleFallback(t *testing.T) {
 	fetcher := &mockFetcher{
 		err: errors.New("api error"),
@@ -96,6 +103,7 @@ func TestFetchUsageStaleFallback(t *testing.T) {
 		stored: &UsageData{
 			BlockPercentage: 50.0,
 			FetchedAt:       time.Now(),
+			IsStale:         true, // simulates TTL expiry as computed by FileCache.Get()
 		},
 	}
 
@@ -112,6 +120,44 @@ func TestFetchUsageStaleFallback(t *testing.T) {
 	}
 	if data.BlockPercentage != 50.0 {
 		t.Errorf("expected cached data, got %f", data.BlockPercentage)
+	}
+}
+
+// TestFetchUsageStaleRefreshFailure verifies the full cycle: data was fresh
+// when first stored, then TTL expired (simulated by IsStale=true on Get),
+// token succeeds but API fails, and we still get the stale cached data back.
+func TestFetchUsageStaleRefreshFailure(t *testing.T) {
+	fetcher := &mockFetcher{
+		err: errors.New("api temporarily unavailable"),
+	}
+
+	// Simulate: data was originally fresh, but cache.Get() now returns it
+	// with IsStale=true (as FileCache.Get does when TTL has elapsed).
+	cache := &mockCache{
+		stored: &UsageData{
+			BlockPercentage:  65.0,
+			WeeklyPercentage: 30.0,
+			FetchedAt:        time.Now().Add(-10 * time.Minute),
+			IsStale:          true,
+		},
+	}
+
+	origTokenGetter := tokenGetter
+	defer func() { tokenGetter = origTokenGetter }()
+	tokenGetter = func() (string, error) { return "test-token", nil }
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data fallback, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale indicator on returned data")
+	}
+	if data.BlockPercentage != 65.0 {
+		t.Errorf("expected cached block 65.0, got %f", data.BlockPercentage)
+	}
+	if !fetcher.called {
+		t.Error("expected API to be called (token succeeded)")
 	}
 }
 
@@ -148,6 +194,36 @@ func TestFetchUsageNoToken(t *testing.T) {
 	}
 	if data != nil {
 		t.Errorf("expected nil data, got %+v", data)
+	}
+}
+
+func TestFetchUsageNoTokenWithStaleCache(t *testing.T) {
+	fetcher := &mockFetcher{}
+	cache := &mockCache{
+		stored: &UsageData{
+			BlockPercentage: 42.0,
+			FetchedAt:       time.Now(),
+			IsStale:         true,
+		},
+	}
+
+	origTokenGetter := tokenGetter
+	defer func() { tokenGetter = origTokenGetter }()
+	tokenGetter = func() (string, error) { return "", errors.New("no token") }
+
+	// Token fails but stale cache exists — should return stale data
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale indicator")
+	}
+	if data.BlockPercentage != 42.0 {
+		t.Errorf("expected cached data 42.0, got %f", data.BlockPercentage)
+	}
+	if fetcher.called {
+		t.Error("expected API to NOT be called when token fails")
 	}
 }
 

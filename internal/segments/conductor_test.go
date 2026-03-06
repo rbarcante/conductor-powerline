@@ -62,6 +62,19 @@ func TestConductorMarketplace(t *testing.T) {
 	}
 }
 
+func TestConductorMarketplaceNoNerdFonts(t *testing.T) {
+	theme, _ := themes.Get("dark")
+	seg := Conductor(ConductorMarketplace, false, theme)
+
+	if seg.Text != "Install Conductor" {
+		t.Errorf("expected 'Install Conductor' (no icon), got %q", seg.Text)
+	}
+	colors := theme.Segments["conductor_missing"]
+	if seg.FG != colors.FG || seg.BG != colors.BG {
+		t.Errorf("expected conductor_missing colors, got FG=%q BG=%q", seg.FG, seg.BG)
+	}
+}
+
 func TestConductorNone(t *testing.T) {
 	theme, _ := themes.Get("dark")
 	seg := Conductor(ConductorNone, true, theme)

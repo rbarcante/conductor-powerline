@@ -17,17 +17,30 @@ type UsageCache interface {
 	Get(key string) *UsageData
 }
 
-// FetchUsage orchestrates usage data retrieval: gets token, calls API,
-// caches on success (keyed by workspace), serves stale on failure.
+// FetchUsage orchestrates usage data retrieval: checks cache first to avoid
+// unnecessary API calls, only hitting the API when cache is stale or empty.
 // Returns nil with error on first-run failure (no cache available).
 func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string) (*UsageData, error) {
-	debug.Logf("usage", "fetching token...")
+	// 1. Check cache first — avoid API call if data is fresh
+	cached := cache.Get(workspaceKey)
+	if cached != nil && !cached.IsStale {
+		debug.Logf("usage", "cache hit (fresh): block=%.1f%% weekly=%.1f%%", cached.BlockPercentage, cached.WeeklyPercentage)
+		return cached, nil
+	}
+
+	// 2. Cache is stale or empty — need to call API
 	token, err := tokenGetter()
 	if err != nil {
 		debug.Logf("usage", "token retrieval failed: %v", err)
+		if cached != nil {
+			// Staleness is transient for this render cycle only — not persisted.
+			// FileCache.Get() recomputes staleness from TTL on each read.
+			cached.IsStale = true
+			return cached, nil
+		}
 		return nil, err
 	}
-	debug.Logf("usage", "token retrieved, calling API...")
+
 	data, err := fetcher.FetchUsageData(token)
 	if err == nil {
 		data.IsStale = false
@@ -37,15 +50,14 @@ func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string) (*U
 	}
 	debug.Logf("usage", "API call failed: %v", err)
 
-	// API failed — try serving cached data
-	cached := cache.Get(workspaceKey)
+	// 3. API failed — serve stale cached data if available
 	if cached != nil {
+		// Staleness is transient for this render cycle only — not persisted.
+		// FileCache.Get() recomputes staleness from TTL on each read.
 		cached.IsStale = true
-		debug.Logf("usage", "serving stale cached data (block=%.1f%% weekly=%.1f%%)", cached.BlockPercentage, cached.WeeklyPercentage)
+		debug.Logf("usage", "serving stale cached data")
 		return cached, nil
 	}
 
-	// First run, no cache — return error
-	debug.Logf("usage", "no cached data available — returning error")
 	return nil, errors.New("oauth: API failed and no cached data available")
 }

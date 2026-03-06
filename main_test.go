@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+// envWithHome returns os.Environ() with HOME and USERPROFILE replaced by fakeHome.
+func envWithHome(fakeHome string) []string {
+	var env []string
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "HOME=") && !strings.HasPrefix(e, "USERPROFILE=") {
+			env = append(env, e)
+		}
+	}
+	return append(env, "HOME="+fakeHome, "USERPROFILE="+fakeHome)
+}
+
 func binName() string {
 	name := "conductor-powerline"
 	if runtime.GOOS == "windows" {
@@ -230,7 +241,7 @@ func TestIntegrationConductorSegmentPresent(t *testing.T) {
 	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
-	cmd.Env = append(os.Environ(), "HOME="+fakeHome, "USERPROFILE="+fakeHome)
+	cmd.Env = envWithHome(fakeHome)
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("run failed: %v", err)
@@ -337,9 +348,7 @@ print(json.dumps(data))
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
 	cmd.Dir = projectDir
-	cmd.Env = append(os.Environ(),
-		"HOME="+fakeHome,
-		"USERPROFILE="+fakeHome,       // Windows uses USERPROFILE for os.UserHomeDir()
+	cmd.Env = append(envWithHome(fakeHome),
 		"XDG_CACHE_HOME="+t.TempDir(), // isolate cache
 	)
 	out, err := cmd.Output()
