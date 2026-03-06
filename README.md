@@ -5,6 +5,7 @@
 A fast, zero-dependency Go CLI that renders a powerline-style statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 - Model info, git branch, directory, API usage (5h block / 7d rolling), context window
+- **Second line**: live Conductor workflow status (setup, active track, task progress, overall tracks)
 - 6 built-in themes — dark, light, nord, gruvbox, tokyo-night, rose-pine
 - Nerd Font glyphs (with plain-text fallback)
 - macOS Keychain, Linux secret-tool, Windows Credential Manager
@@ -47,6 +48,27 @@ That's it — restart Claude Code and the powerline appears in your statusline.
 | `context` | Context window usage with threshold colors |
 | `conductor` | Conductor plugin status / "Try Conductor" hyperlink |
 
+### Second Line — Conductor Workflow Status
+
+When the [Conductor plugin](https://github.com/rbarcante/claude-conductor) is active in the current project, a second powerline line appears automatically with four segments:
+
+| Segment | Key | Example | Description |
+|---------|-----|---------|-------------|
+| Setup status | `workflow_setup` | `Setup 100%` | Conductor project setup completion |
+| Active track | `workflow_track` | `auth-flow` | Name/ID of the current in-progress track |
+| Track tasks | `workflow_tasks` | `12/35` | Completed / total tasks for the active track |
+| Overall tracks | `workflow_overall` | `9/9 tracks` | Completed / total tracks across the project |
+
+Line 2 is rendered only when **all** conditions are met:
+- Conductor plugin is installed and the project has a `conductor/` directory
+- `conductor_cli.py --json status` succeeds (exit 0, valid JSON)
+- `conductor_workflow` segment is enabled in config (default: `true`)
+
+To disable line 2:
+```json
+{ "segments": { "conductor_workflow": { "enabled": false } } }
+```
+
 ## Configuration
 
 Loaded in order (later overrides earlier):
@@ -69,9 +91,10 @@ Loaded in order (later overrides earlier):
     "block": { "enabled": true },
     "weekly": { "enabled": false },
     "context": { "enabled": true },
-    "conductor": { "enabled": true }
+    "conductor": { "enabled": true },
+    "conductor_workflow": { "enabled": true }
   },
-  "segmentOrder": ["directory", "git", "model", "block", "weekly", "context", "conductor"],
+  "segmentOrder": ["directory", "git", "model", "block", "weekly", "context", "conductor", "conductor_workflow"],
   "apiTimeout": "5s",
   "cacheTTL": "30s",
   "trendThreshold": 2.0

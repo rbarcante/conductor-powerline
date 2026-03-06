@@ -6,5 +6,8 @@
   "priority": "medium",
   "created": "2026-02-19",
   "branch": "refactor/context-window-used-percentage",
-  "updated_at": "2026-02-19T19:48:28.693928Z"
+  "updated_at": "2026-02-19T19:48:28.693928Z",
+  "track_id": "use-context-window-used_20260219",
+  "created_at": "2026-02-21T14:26:24.208409Z",
+  "description": "Use context_window.used_percentage from Claude Code statusline JSON"
 }

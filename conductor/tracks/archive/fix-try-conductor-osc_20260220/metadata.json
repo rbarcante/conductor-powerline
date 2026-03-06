@@ -6,5 +6,7 @@
   "created": "2026-02-20",
   "branch": "bugfix/tmux-osc8-hyperlink",
   "description": "Fix Try Conductor OSC 8 hyperlink not clickable in tmux",
-  "updated_at": "2026-02-20T03:52:06.342067Z"
+  "updated_at": "2026-02-20T03:52:06.342067Z",
+  "track_id": "fix-try-conductor-osc_20260220",
+  "created_at": "2026-02-21T14:26:24.208409Z"
 }

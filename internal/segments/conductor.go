@@ -16,32 +16,12 @@ const conductorURL = "https://github.com/rbarcante/claude-conductor"
 func Conductor(status ConductorStatus, nerdFonts bool, theme themes.Theme) Segment {
 	switch status {
 	case ConductorActive:
-		colors := theme.Segments["conductor"]
-		text := "✓ Conductor"
-		if !nerdFonts {
-			text = "OK Conductor"
-		}
-		return Segment{
-			Name:    "conductor",
-			Text:    text,
-			FG:      colors.FG,
-			BG:      colors.BG,
-			Enabled: true,
-		}
+		// Conductor is active: workflow status appears on line 2, so line 1 segment is hidden.
+		return Segment{Name: "conductor", Enabled: false}
 
 	case ConductorInstalled:
-		colors := theme.Segments["conductor_missing"]
-		label := "⚡ Setup Conductor"
-		if !nerdFonts {
-			label = "Setup Conductor"
-		}
-		return Segment{
-			Name:    "conductor",
-			Text:    label,
-			FG:      colors.FG,
-			BG:      colors.BG,
-			Enabled: true,
-		}
+		// Plugin installed but project not set up: hide from line 1 to reduce noise.
+		return Segment{Name: "conductor", Enabled: false}
 
 	case ConductorMarketplace:
 		colors := theme.Segments["conductor_missing"]

@@ -33,6 +33,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "231", BG: "124"}, // #ffffff / #af0000
 			"conductor":         {FG: "157", BG: "236"}, // #98fb98 / #2d2d2d
 			"conductor_missing": {FG: "221", BG: "236"}, // #ffd700 / #2d2d2d
+			"workflow_setup":    {FG: "157", BG: "238"}, // #98fb98 / #444444
+			"workflow_track":    {FG: "214", BG: "237"}, // #ffaf00 / #404040
+			"workflow_tasks":    {FG: "117", BG: "236"}, // #87d7ff / #2d2d2d
+			"workflow_overall":  {FG: "183", BG: "235"}, // #d7afff / #2a2a2a
 		},
 	},
 	"light": {
@@ -50,6 +54,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "231", BG: "203"}, // #ffffff / #ef4444
 			"conductor":         {FG: "231", BG: "35"},  // #ffffff / #00af5f
 			"conductor_missing": {FG: "16", BG: "220"},  // #000000 / #ffd700
+			"workflow_setup":    {FG: "231", BG: "35"},  // #ffffff / #00af5f
+			"workflow_track":    {FG: "231", BG: "208"}, // #ffffff / #ff8700
+			"workflow_tasks":    {FG: "231", BG: "39"},  // #ffffff / #00afff
+			"workflow_overall":  {FG: "231", BG: "141"}, // #ffffff / #8b5cf6
 		},
 	},
 	"nord": {
@@ -67,6 +75,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "231", BG: "174"}, // #eceff4 / #bf616a
 			"conductor":         {FG: "151", BG: "66"},  // #a3be8c / #4c566a
 			"conductor_missing": {FG: "59", BG: "180"},  // #2e3440 / #d08770
+			"workflow_setup":    {FG: "151", BG: "60"},  // #a3be8c / #434c5e
+			"workflow_track":    {FG: "180", BG: "60"},  // #d08770 / #434c5e
+			"workflow_tasks":    {FG: "152", BG: "59"},  // #8fbcbb / #2e3440
+			"workflow_overall":  {FG: "181", BG: "59"},  // #b48ead / #2e3440
 		},
 	},
 	"gruvbox": {
@@ -84,6 +96,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "223", BG: "167"}, // #ebdbb2 / #cc241d
 			"conductor":         {FG: "150", BG: "59"},  // #8ec07c / #3c3836
 			"conductor_missing": {FG: "235", BG: "179"}, // #282828 / #d79921
+			"workflow_setup":    {FG: "150", BG: "59"},  // #8ec07c / #3c3836
+			"workflow_track":    {FG: "221", BG: "59"},  // #fabd2f / #3c3836
+			"workflow_tasks":    {FG: "145", BG: "235"}, // #83a598 / #282828
+			"workflow_overall":  {FG: "181", BG: "235"}, // #d3869b / #282828
 		},
 	},
 	"tokyo-night": {
@@ -101,6 +117,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "59", BG: "211"}, // #1a1b26 / #f7768e
 			"conductor":         {FG: "193", BG: "23"}, // #c3e88d / #191b29
 			"conductor_missing": {FG: "59", BG: "180"}, // #1a1b26 / #e0af68
+			"workflow_setup":    {FG: "193", BG: "23"}, // #c3e88d / #191b29
+			"workflow_track":    {FG: "222", BG: "23"}, // #e0af68 / #191b29
+			"workflow_tasks":    {FG: "117", BG: "59"}, // #7dcfff / #1a202c
+			"workflow_overall":  {FG: "183", BG: "59"}, // #bb9af7 / #1a202c
 		},
 	},
 	"rose-pine": {
@@ -118,6 +138,10 @@ var registry = map[string]Theme{
 			"critical":          {FG: "17", BG: "211"}, // #191724 / #eb6f92
 			"conductor":         {FG: "152", BG: "17"}, // #9ccfd8 / #191724
 			"conductor_missing": {FG: "17", BG: "222"}, // #191724 / #f6c177
+			"workflow_setup":    {FG: "152", BG: "17"}, // #9ccfd8 / #191724
+			"workflow_track":    {FG: "222", BG: "17"}, // #f6c177 / #191724
+			"workflow_tasks":    {FG: "67", BG: "59"},  // #31748f / #232136
+			"workflow_overall":  {FG: "183", BG: "59"}, // #c4a7e7 / #232136
 		},
 	},
 }
