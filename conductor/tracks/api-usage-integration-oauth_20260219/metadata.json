@@ -7,5 +7,7 @@
   "branch": "feature/api-usage-integration",
   "created": "2026-02-19",
   "description": "OAuth token retrieval and Anthropic API calls for 5-hour block and 7-day rolling usage data with caching and trend indicators",
-  "updated_at": "2026-02-19T15:45:58.154750Z"
+  "updated_at": "2026-02-19T15:45:58.154750Z",
+  "track_id": "api-usage-integration-oauth_20260219",
+  "created_at": "2026-02-21T14:26:24.208409Z"
 }
