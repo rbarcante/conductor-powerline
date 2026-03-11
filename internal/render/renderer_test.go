@@ -88,11 +88,20 @@ func TestRenderCompactMode(t *testing.T) {
 		{Name: "model", Text: "Opus 4.6", FG: "15", BG: "57", Enabled: true},
 	}
 
-	// Render at narrow width — compact mode should truncate
+	// Render at narrow width — compact mode should truncate proportionally
 	out := Render(segs, true, 30)
 
 	if strings.Contains(out, "a-very-long-project-name-here") {
 		t.Error("expected text to be truncated in compact mode")
+	}
+
+	// With a large termWidth, no truncation should occur
+	outWide := Render(segs, true, 200)
+	if !strings.Contains(outWide, "a-very-long-project-name-here") {
+		t.Error("with large termWidth, text should not be truncated")
+	}
+	if !strings.Contains(outWide, "Opus 4.6") {
+		t.Error("with large termWidth, short text should not be truncated")
 	}
 }
 
