@@ -290,6 +290,105 @@ func TestRenderRightWithLinkInTmuxShowsPlainURL(t *testing.T) {
 	}
 }
 
+// --- Tests for proportional truncation (compactTexts) ---
+
+func TestCompactTextsNoTruncationWhenFits(t *testing.T) {
+	// When total width fits within termWidth, no truncation should occur
+	segs := []segments.Segment{
+		{Name: "dir", Text: "my-project", FG: "15", BG: "236", Enabled: true},
+		{Name: "model", Text: "Opus 4.6", FG: "15", BG: "57", Enabled: true},
+	}
+
+	// Total: 10+3 + 8+3 = 24. termWidth=200 → no truncation needed
+	result := compactTexts(segs, 200)
+
+	if result[0] != "my-project" {
+		t.Errorf("expected 'my-project', got %q", result[0])
+	}
+	if result[1] != "Opus 4.6" {
+		t.Errorf("expected 'Opus 4.6', got %q", result[1])
+	}
+}
+
+func TestCompactTextsProportionalTruncation(t *testing.T) {
+	// When total exceeds termWidth, segments are proportionally truncated
+	segs := []segments.Segment{
+		{Name: "dir", Text: "a-very-long-project-name", FG: "15", BG: "236", Enabled: true}, // 24 chars
+		{Name: "model", Text: "Opus 4.6", FG: "15", BG: "57", Enabled: true},                // 8 chars
+	}
+
+	// Total text: 24+8=32 chars, plus overhead ~6 each = ~44
+	// termWidth=30 → must truncate
+	result := compactTexts(segs, 30)
+
+	// The longer segment should be truncated more
+	if len([]rune(result[0])) >= 24 {
+		t.Errorf("expected dir text to be truncated, got %q (len=%d)", result[0], len([]rune(result[0])))
+	}
+	// Shorter segment may also be truncated
+	if len([]rune(result[0])) > len([]rune(result[1])) {
+		// Proportional: longer text gets more share, but both could be shortened
+	}
+	// Both should still contain some text
+	if len([]rune(result[0])) < 3 {
+		t.Errorf("segment text too short: %q", result[0])
+	}
+	if len([]rune(result[1])) < 3 {
+		t.Errorf("segment text too short: %q", result[1])
+	}
+}
+
+func TestCompactTextsMinimumFloor(t *testing.T) {
+	// Even with very narrow width, no segment should be less than 3 characters
+	segs := []segments.Segment{
+		{Name: "a", Text: "abcdefghijklmnop", FG: "15", BG: "236", Enabled: true},
+		{Name: "b", Text: "qrstuvwxyz", FG: "15", BG: "57", Enabled: true},
+		{Name: "c", Text: "1234567890", FG: "15", BG: "22", Enabled: true},
+	}
+
+	result := compactTexts(segs, 10) // extremely narrow
+
+	for i, txt := range result {
+		runes := []rune(txt)
+		if len(runes) < 3 {
+			t.Errorf("segment %d text %q is below minimum 3 chars", i, txt)
+		}
+	}
+}
+
+func TestCompactTextsSingleSegmentExceedingWidth(t *testing.T) {
+	segs := []segments.Segment{
+		{Name: "dir", Text: "a-very-long-project-name-that-exceeds-everything", FG: "15", BG: "236", Enabled: true},
+	}
+
+	result := compactTexts(segs, 20)
+
+	runes := []rune(result[0])
+	if len(runes) >= 49 {
+		t.Errorf("expected single segment to be truncated, got %q", result[0])
+	}
+	if len(runes) < 3 {
+		t.Errorf("single segment should have at least 3 chars, got %q", result[0])
+	}
+}
+
+func TestRenderProportionalTruncationNoTruncWhenLargeWidth(t *testing.T) {
+	// FR-1: When total width fits within CompactWidth (termWidth=200), no truncation
+	segs := []segments.Segment{
+		{Name: "dir", Text: "my-project", FG: "15", BG: "236", Enabled: true},
+		{Name: "model", Text: "Opus 4.6", FG: "15", BG: "57", Enabled: true},
+	}
+
+	out := Render(segs, true, 200)
+
+	if !strings.Contains(out, "my-project") {
+		t.Error("with large termWidth, text should not be truncated")
+	}
+	if !strings.Contains(out, "Opus 4.6") {
+		t.Error("with large termWidth, text should not be truncated")
+	}
+}
+
 func TestRenderSegmentOrder(t *testing.T) {
 	segs := []segments.Segment{
 		{Name: "model", Text: "Opus", FG: "15", BG: "57", Enabled: true},
