@@ -12,7 +12,8 @@ import (
 // Used to skip OSC 8 hyperlinks which Claude Code doesn't forward in tmux.
 var inTmux = os.Getenv("TMUX") != ""
 
-const maxCompactTextLen = 12
+// minCompactTextLen is the minimum characters a segment can be truncated to.
+const minCompactTextLen = 3
 
 // ANSI 256-color escape code helpers.
 // Format: \033[38;5;{n}m = set foreground to color n
@@ -61,12 +62,17 @@ func Render(segs []segments.Segment, nerdFonts bool, termWidth int) string {
 		sep = SeparatorText
 	}
 
+	var texts []string
+	if compact {
+		texts = compactTexts(active, termWidth)
+	}
+
 	var b strings.Builder
 
 	for i, seg := range active {
 		text := seg.Text
 		if compact {
-			text = truncate(text, maxCompactTextLen)
+			text = texts[i]
 		}
 
 		if seg.Link != "" && !inTmux {
@@ -149,6 +155,54 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 	// Reset at the end
 	b.WriteString("\033[0m")
 	return b.String()
+}
+
+// compactTexts calculates per-segment max text lengths proportional to each
+// segment's original text length, so the total rendered width fits within
+// termWidth. Each segment gets at least minCompactTextLen characters.
+func compactTexts(segs []segments.Segment, termWidth int) []string {
+	n := len(segs)
+	result := make([]string, n)
+
+	// overhead per segment: 1 space padding on each side + 1 separator char
+	const overheadPerSeg = 3
+	totalOverhead := n * overheadPerSeg
+
+	// Available width for text only
+	availableTextWidth := termWidth - totalOverhead
+	if availableTextWidth < n*minCompactTextLen {
+		availableTextWidth = n * minCompactTextLen
+	}
+
+	// Calculate total original text length
+	totalTextLen := 0
+	for _, s := range segs {
+		totalTextLen += len([]rune(s.Text))
+	}
+
+	// If everything already fits, no truncation needed
+	if totalTextLen <= availableTextWidth {
+		for i, s := range segs {
+			result[i] = s.Text
+		}
+		return result
+	}
+
+	// Proportionally allocate available width
+	for i, s := range segs {
+		runes := []rune(s.Text)
+		textLen := len(runes)
+
+		// Proportional share of available width
+		maxLen := (textLen * availableTextWidth) / totalTextLen
+		if maxLen < minCompactTextLen {
+			maxLen = minCompactTextLen
+		}
+
+		result[i] = truncate(s.Text, maxLen)
+	}
+
+	return result
 }
 
 func filterEnabled(segs []segments.Segment) []segments.Segment {
