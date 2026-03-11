@@ -15,6 +15,9 @@ var inTmux = os.Getenv("TMUX") != ""
 // minCompactTextLen is the minimum characters a segment can be truncated to.
 const minCompactTextLen = 3
 
+// overheadPerSeg is the character overhead per segment: 1 space left + 1 space right + 1 separator.
+const overheadPerSeg = 3
+
 // ANSI 256-color escape code helpers.
 // Format: \033[38;5;{n}m = set foreground to color n
 //         \033[48;5;{n}m = set background to color n
@@ -160,46 +163,72 @@ func RenderRight(segs []segments.Segment, nerdFonts bool) string {
 // compactTexts calculates per-segment max text lengths proportional to each
 // segment's original text length, so the total rendered width fits within
 // termWidth. Each segment gets at least minCompactTextLen characters.
+// Proportional shares are rounded down, so the result may slightly undershoot
+// the available width; remainder characters are distributed to the longest segments.
 func compactTexts(segs []segments.Segment, termWidth int) []string {
 	n := len(segs)
 	result := make([]string, n)
+	lengths := make([]int, n)
 
-	// overhead per segment: 1 space padding on each side + 1 separator char
-	const overheadPerSeg = 3
+	// The last segment has no trailing separator, so overhead is slightly less,
+	// but we use a uniform estimate for simplicity (slightly conservative).
 	totalOverhead := n * overheadPerSeg
 
-	// Available width for text only
+	// Available width for text only. When termWidth is very small (less than
+	// overhead alone), clamp to the minimum floor — this is best-effort and
+	// the result may still exceed termWidth.
 	availableTextWidth := termWidth - totalOverhead
+	clamped := false
 	if availableTextWidth < n*minCompactTextLen {
 		availableTextWidth = n * minCompactTextLen
+		clamped = true
 	}
 
-	// Calculate total original text length
+	// Calculate total original text length in a single pass
 	totalTextLen := 0
-	for _, s := range segs {
-		totalTextLen += len([]rune(s.Text))
+	for i, s := range segs {
+		lengths[i] = len([]rune(s.Text))
+		totalTextLen += lengths[i]
 	}
 
-	// If everything already fits, no truncation needed
-	if totalTextLen <= availableTextWidth {
+	// If everything already fits (and we didn't clamp), no truncation needed
+	if !clamped && totalTextLen <= availableTextWidth {
 		for i, s := range segs {
 			result[i] = s.Text
 		}
 		return result
 	}
 
-	// Proportionally allocate available width
-	for i, s := range segs {
-		runes := []rune(s.Text)
-		textLen := len(runes)
-
-		// Proportional share of available width
-		maxLen := (textLen * availableTextWidth) / totalTextLen
+	// Proportionally allocate available width, then distribute remainder
+	allocated := 0
+	for i := range segs {
+		maxLen := (lengths[i] * availableTextWidth) / totalTextLen
 		if maxLen < minCompactTextLen {
 			maxLen = minCompactTextLen
 		}
+		lengths[i] = maxLen
+		allocated += maxLen
+	}
 
-		result[i] = truncate(s.Text, maxLen)
+	// Distribute leftover characters to longest segments first
+	remainder := availableTextWidth - allocated
+	for remainder > 0 {
+		best := -1
+		for i := range segs {
+			origLen := len([]rune(segs[i].Text))
+			if lengths[i] < origLen && (best < 0 || lengths[i] > lengths[best]) {
+				best = i
+			}
+		}
+		if best < 0 {
+			break
+		}
+		lengths[best]++
+		remainder--
+	}
+
+	for i, s := range segs {
+		result[i] = truncate(s.Text, lengths[i])
 	}
 
 	return result
@@ -218,15 +247,21 @@ func filterEnabled(segs []segments.Segment) []segments.Segment {
 func shouldCompact(segs []segments.Segment, termWidth int) bool {
 	totalLen := 0
 	for _, s := range segs {
-		totalLen += len([]rune(s.Text)) + 3 // text + padding + separator
+		totalLen += len([]rune(s.Text)) + overheadPerSeg
 	}
 	return totalLen > termWidth
 }
 
 func truncate(text string, maxLen int) string {
+	if maxLen <= 0 {
+		return ""
+	}
 	runes := []rune(text)
 	if len(runes) <= maxLen {
 		return text
+	}
+	if maxLen == 1 {
+		return "…"
 	}
 	return string(runes[:maxLen-1]) + "…"
 }

@@ -330,19 +330,22 @@ func TestCompactTextsProportionalTruncation(t *testing.T) {
 	// termWidth=30 → must truncate
 	result := compactTexts(segs, 30)
 
-	// The longer segment should be truncated more
-	if len([]rune(result[0])) >= 24 {
-		t.Errorf("expected dir text to be truncated, got %q (len=%d)", result[0], len([]rune(result[0])))
+	len0 := len([]rune(result[0]))
+	len1 := len([]rune(result[1]))
+
+	// The longer segment should be truncated
+	if len0 >= 24 {
+		t.Errorf("expected dir text to be truncated, got %q (len=%d)", result[0], len0)
 	}
-	// Shorter segment may also be truncated
-	if len([]rune(result[0])) > len([]rune(result[1])) {
-		// Proportional: longer text gets more share, but both could be shortened
+	// Proportionality: longer input (24 chars) should get more share than shorter (8 chars)
+	if len0 <= len1 {
+		t.Errorf("expected longer segment to get more width: dir=%d, model=%d", len0, len1)
 	}
 	// Both should still contain some text
-	if len([]rune(result[0])) < 3 {
+	if len0 < 3 {
 		t.Errorf("segment text too short: %q", result[0])
 	}
-	if len([]rune(result[1])) < 3 {
+	if len1 < 3 {
 		t.Errorf("segment text too short: %q", result[1])
 	}
 }
