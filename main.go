@@ -85,19 +85,31 @@ func run() error {
 		// On error, usageData remains nil → segments show "--" placeholder
 	}()
 
-	// Fetch workflow data concurrently when conductor is active
+	// Fetch workflow data concurrently when conductor is active.
+	// WorkflowFileCache avoids spawning a Python subprocess on every render.
 	if conductorStatus == segments.ConductorActive {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			wfCache := segments.NewWorkflowFileCache(cacheDir(), cfg.CacheTTL.Duration)
+			if cached := wfCache.Get(workspace); cached != nil && !cached.IsStale {
+				debug.Logf("main", "workflow cache hit (fresh)")
+				workflowData = cached
+				return
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.APITimeout.Duration)
 			defer cancel()
 			home, _ := os.UserHomeDir()
 			data, err := segments.FetchWorkflowStatus(ctx, home, workspace)
 			if err == nil {
+				wfCache.Store(workspace, data)
 				workflowData = data
 			} else {
 				debug.Logf("main", "workflow fetch failed: %v", err)
+				// Serve stale cache rather than showing nothing
+				if stale := wfCache.Get(workspace); stale != nil {
+					workflowData = stale
+				}
 			}
 		}()
 	}

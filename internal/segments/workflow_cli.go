@@ -14,8 +14,9 @@ import (
 
 // WorkflowData holds the parsed output from conductor_cli.py --json status.
 type WorkflowData struct {
-	Setup  WorkflowSetupInfo  `json:"setup"`
-	Tracks WorkflowTracksInfo `json:"tracks"`
+	Setup   WorkflowSetupInfo  `json:"setup"`
+	Tracks  WorkflowTracksInfo `json:"tracks"`
+	IsStale bool               `json:"-"` // set by WorkflowFileCache.Get when TTL has expired
 }
 
 // WorkflowSetupInfo reflects the setup validity and completion state.
