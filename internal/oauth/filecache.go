@@ -13,6 +13,11 @@ import (
 
 const lockPollInterval = 50 * time.Millisecond
 
+// staleLockAge is the age after which a lock file is considered orphaned and can
+// be safely removed. This handles the case where a process crashes or is killed
+// without releasing its lock, which would otherwise block all future refreshes.
+const staleLockAge = 10 * time.Second
+
 // fileCacheEntry is the on-disk JSON structure for cached usage data.
 type fileCacheEntry struct {
 	Data     UsageData `json:"data"`
@@ -152,6 +157,9 @@ func (fc *FileCache) lockPath(key string) string {
 // O_EXCL file creation — atomic on both POSIX and Windows NTFS.
 // Returns (true, releaseFn) on success; (false, nil) if already locked.
 // The caller must call releaseFn to release the lock.
+//
+// If an existing lock file is older than staleLockAge, it is treated as orphaned
+// (the holder likely crashed) and removed before retrying.
 func (fc *FileCache) TryLock(key string) (bool, func()) {
 	if err := os.MkdirAll(fc.dir, 0o700); err != nil {
 		return false, nil
@@ -159,8 +167,19 @@ func (fc *FileCache) TryLock(key string) (bool, func()) {
 	lockFile := fc.lockPath(key)
 	f, err := os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
-		// File already exists — lock is held by another process
-		return false, nil
+		// Lock file exists — check if it's orphaned (stale).
+		info, statErr := os.Stat(lockFile)
+		if statErr == nil && time.Since(info.ModTime()) > staleLockAge {
+			debug.Logf("filecache", "removing stale lock file (age %v)", time.Since(info.ModTime()))
+			os.Remove(lockFile)
+			// Retry once after removing the stale lock.
+			f, err = os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL, 0o600)
+			if err != nil {
+				return false, nil
+			}
+		} else {
+			return false, nil
+		}
 	}
 	f.Close()
 	release := func() {

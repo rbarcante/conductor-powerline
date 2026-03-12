@@ -65,7 +65,10 @@ func run() error {
 	conductorStatus := segments.DetectConductorStatus("", workspace)
 	debug.Logf("main", "conductor status: %d (workspace=%s)", conductorStatus, workspace)
 
-	// 5. Fetch usage data and workflow data concurrently
+	// 5. Set rotated token dir before fetching usage
+	oauth.SetRotatedTokenDir(cacheDir())
+
+	// 6. Fetch usage data and workflow data concurrently
 	var usageData *oauth.UsageData
 	var workflowData *segments.WorkflowData
 	var wg sync.WaitGroup

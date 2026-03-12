@@ -274,6 +274,22 @@ func TestParseRetryAfter(t *testing.T) {
 
 // --- RefreshOAuthToken tests ---
 
+func TestRefreshError_Error(t *testing.T) {
+	re := &RefreshError{StatusCode: 400, Body: "invalid_grant"}
+	msg := re.Error()
+	if msg == "" {
+		t.Error("expected non-empty error message")
+	}
+}
+
+func TestRateLimitError_Error(t *testing.T) {
+	rle := &RateLimitError{RetryAfter: 30 * time.Second, Body: "rate limited"}
+	msg := rle.Error()
+	if msg == "" {
+		t.Error("expected non-empty error message")
+	}
+}
+
 func TestRefreshOAuthToken_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
