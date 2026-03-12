@@ -339,7 +339,7 @@ func TestFetchUsage_RateLimitExtendsCacheTTL(t *testing.T) {
 		IsStale:         true,
 	}
 	fetcher := &mockFetcher{
-		err: &RateLimitError{RetryAfter: 30 * time.Second, Body: "rate limited"},
+		err: &RateLimitError{RetryAfter: 30 * time.Second, body: "rate limited"},
 	}
 	cache := &mockCache{stored: staleData}
 
@@ -386,7 +386,7 @@ func TestFetchUsage_RateLimitBackoff(t *testing.T) {
 
 	apiCalls := 0
 	fetcher := &mockFetcher{
-		err: &RateLimitError{RetryAfter: 60 * time.Second, Body: "rate limited"},
+		err: &RateLimitError{RetryAfter: 60 * time.Second, body: "rate limited"},
 	}
 
 	// First call: cache has stale data, API returns 429, backoff is set.
@@ -454,6 +454,50 @@ type dynamicMockFetcher struct {
 
 func (d *dynamicMockFetcher) FetchUsageData(token string) (*UsageData, error) {
 	return d.fn(token)
+}
+
+func TestHandleRateLimitBackoff_ZeroRetryAfter(t *testing.T) {
+	cached := &UsageData{
+		BlockPercentage: 42.0,
+		FetchedAt:       time.Now().Add(-5 * time.Minute),
+	}
+	rle := &RateLimitError{RetryAfter: 0}
+	cache := &mockCache{}
+
+	result := handleRateLimitBackoff(rle, cached, cache)
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	if !result.IsStale {
+		t.Error("expected stale result")
+	}
+	// With zero RetryAfter, backoff should use minRateLimitBackoff (60s).
+	backoff := time.Until(result.RateLimitedUntil)
+	if backoff < 55*time.Second {
+		t.Errorf("expected backoff >= 55s (minRateLimitBackoff), got %v", backoff)
+	}
+}
+
+func TestHandleRateLimitBackoff_LargeRetryAfter(t *testing.T) {
+	cached := &UsageData{
+		BlockPercentage: 42.0,
+		FetchedAt:       time.Now().Add(-5 * time.Minute),
+	}
+	rle := &RateLimitError{RetryAfter: 120 * time.Second}
+	cache := &mockCache{}
+
+	result := handleRateLimitBackoff(rle, cached, cache)
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	// 120s > minRateLimitBackoff, so backoff should be ~120s (not clamped to 60s).
+	backoff := time.Until(result.RateLimitedUntil)
+	if backoff < 115*time.Second {
+		t.Errorf("expected backoff >= 115s (120s RetryAfter), got %v", backoff)
+	}
+	if backoff > 125*time.Second {
+		t.Errorf("expected backoff <= 125s, got %v", backoff)
+	}
 }
 
 func TestFetchUsageWithFileCache(t *testing.T) {

@@ -12,6 +12,8 @@ import (
 var credfilePathResolver = defaultCredfilePath
 
 // claudeAiOAuthEntry represents the nested OAuth object in Claude Code's credentials file.
+// RefreshToken and ExpiresAt are present in the credential file for future token-rotation
+// support but are not yet used by conductor-powerline.
 type claudeAiOAuthEntry struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`

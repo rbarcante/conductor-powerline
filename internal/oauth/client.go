@@ -31,7 +31,7 @@ type Client struct {
 // RateLimitError is returned when the API responds with HTTP 429.
 type RateLimitError struct {
 	RetryAfter time.Duration
-	Body       string
+	body       string // unexported: contains full API response, not for external consumption
 }
 
 func (e *RateLimitError) Error() string {
@@ -61,7 +61,6 @@ func parseRetryAfter(value string) time.Duration {
 // Go's default HTTP/2 in short-lived processes (new TLS handshake each run).
 func NewClient(baseURL string, timeout time.Duration) *Client {
 	transport := &http.Transport{
-		ForceAttemptHTTP2: false,
 		// Empty non-nil map prevents h2 ALPN negotiation — definitive HTTP/2 disable in Go.
 		TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 		MaxIdleConns: 1,
@@ -120,7 +119,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 			debug.Logf("api", "rate limited (429), Retry-After: %v", retryAfter)
 			return nil, &RateLimitError{
 				RetryAfter: retryAfter,
-				Body:       string(errBody),
+				body:       string(errBody),
 			}
 		}
 		return nil, fmt.Errorf("oauth: API returned status %d", resp.StatusCode)
