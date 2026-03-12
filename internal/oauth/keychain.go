@@ -85,6 +85,67 @@ func getKeychainCredentials() (*TokenCredentials, error) {
 	return nil, errors.New("oauth: no access token in keychain data")
 }
 
+// updateKeychainTokens reads the existing Keychain JSON, updates the tokens,
+// and writes it back using security add-generic-password -U.
+func updateKeychainTokens(creds *TokenCredentials) error {
+	// Read existing data
+	output, err := keychainCommandRunner(
+		"find-generic-password",
+		"-s", keychainServiceName,
+		"-w",
+	)
+	if err != nil {
+		return err
+	}
+
+	raw := strings.TrimSpace(output)
+	if raw == "" {
+		return errors.New("oauth: empty keychain data")
+	}
+
+	// Parse into generic map to preserve all fields
+	var jsonMap map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &jsonMap); err != nil {
+		return err
+	}
+
+	oauthRaw, ok := jsonMap["claudeAiOauth"]
+	if !ok {
+		return errors.New("oauth: no claudeAiOauth in keychain data")
+	}
+
+	var oauthMap map[string]json.RawMessage
+	if err := json.Unmarshal(oauthRaw, &oauthMap); err != nil {
+		return err
+	}
+
+	accessJSON, _ := json.Marshal(creds.AccessToken)
+	refreshJSON, _ := json.Marshal(creds.RefreshToken)
+	oauthMap["accessToken"] = accessJSON
+	oauthMap["refreshToken"] = refreshJSON
+
+	updatedOAuth, err := json.Marshal(oauthMap)
+	if err != nil {
+		return err
+	}
+	jsonMap["claudeAiOauth"] = updatedOAuth
+
+	updatedData, err := json.Marshal(jsonMap)
+	if err != nil {
+		return err
+	}
+
+	// Write back to Keychain using -U (update) flag
+	_, err = keychainCommandRunner(
+		"add-generic-password",
+		"-s", keychainServiceName,
+		"-a", keychainServiceName,
+		"-w", string(updatedData),
+		"-U",
+	)
+	return err
+}
+
 func runKeychainCommand(args ...string) (string, error) {
 	cmd := exec.Command("security", args...)
 	out, err := cmd.Output()

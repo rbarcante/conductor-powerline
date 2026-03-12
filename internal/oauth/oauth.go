@@ -135,3 +135,28 @@ func getCredentialsDefault() (*TokenCredentials, error) {
 
 	return nil, errors.New("oauth: no credentials found in any source")
 }
+
+// credentialWriter writes rotated tokens back to Claude Code's credential stores.
+// Package-level variable for testability.
+var credentialWriter = writeBackTokensDefault
+
+// writeBackTokensDefault writes the new tokens back to the platform credential
+// store and credfile so that Claude Code continues to work with valid tokens.
+func writeBackTokensDefault(creds *TokenCredentials) {
+	// Always try credfile (cross-platform)
+	if err := updateCredfileTokens(creds); err != nil {
+		debug.Logf("writeback", "credfile update failed: %v", err)
+	} else {
+		debug.Logf("writeback", "credfile updated with rotated tokens")
+	}
+
+	// Platform-specific write-back
+	switch runtime.GOOS {
+	case "darwin":
+		if err := updateKeychainTokens(creds); err != nil {
+			debug.Logf("writeback", "keychain update failed: %v", err)
+		} else {
+			debug.Logf("writeback", "keychain updated with rotated tokens")
+		}
+	}
+}

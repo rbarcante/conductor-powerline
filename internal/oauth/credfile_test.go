@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -184,6 +185,67 @@ func TestGetCredfileCredentials_MissingFile(t *testing.T) {
 	_, err := getCredfileCredentials()
 	if err == nil {
 		t.Error("expected error for missing file")
+	}
+}
+
+// --- updateCredfileTokens tests ---
+
+func TestUpdateCredfileTokens(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	// Write a credfile with extra fields that should be preserved
+	content := `{"claudeAiOauth":{"accessToken":"old-access","refreshToken":"old-refresh","expiresAt":1771535255460,"scopes":["user:inference"],"subscriptionType":"max"}}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	err := updateCredfileTokens(&TokenCredentials{
+		AccessToken:  "new-access",
+		RefreshToken: "new-refresh",
+	})
+	if err != nil {
+		t.Fatalf("expected success, got error: %v", err)
+	}
+
+	// Verify the file was updated
+	data, _ := os.ReadFile(credPath)
+	var raw map[string]interface{}
+	json.Unmarshal(data, &raw)
+
+	oauth := raw["claudeAiOauth"].(map[string]interface{})
+	if oauth["accessToken"] != "new-access" {
+		t.Errorf("expected new-access, got %v", oauth["accessToken"])
+	}
+	if oauth["refreshToken"] != "new-refresh" {
+		t.Errorf("expected new-refresh, got %v", oauth["refreshToken"])
+	}
+	// Verify extra fields preserved
+	if oauth["subscriptionType"] != "max" {
+		t.Errorf("expected subscriptionType preserved, got %v", oauth["subscriptionType"])
+	}
+}
+
+func TestUpdateCredfileTokens_NoClaudeAiOauth(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	content := `{"oauthToken":"legacy-token"}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	err := updateCredfileTokens(&TokenCredentials{AccessToken: "new"})
+	if err == nil {
+		t.Error("expected error for legacy format without claudeAiOauth")
 	}
 }
 

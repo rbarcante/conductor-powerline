@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 )
@@ -142,6 +143,76 @@ func TestGetKeychainCredentials_NoRefreshToken(t *testing.T) {
 	}
 	if creds.RefreshToken != "" {
 		t.Errorf("expected empty refresh token, got %q", creds.RefreshToken)
+	}
+}
+
+// --- updateKeychainTokens tests ---
+
+func TestUpdateKeychainTokens_Success(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	var writtenPassword string
+	keychainCommandRunner = func(args ...string) (string, error) {
+		if args[0] == "find-generic-password" {
+			return `{"claudeAiOauth":{"accessToken":"old-access","refreshToken":"old-refresh","expiresAt":1771535255460,"scopes":["user:inference"]}}`, nil
+		}
+		if args[0] == "add-generic-password" {
+			// Capture the -w argument
+			for i, a := range args {
+				if a == "-w" && i+1 < len(args) {
+					writtenPassword = args[i+1]
+				}
+			}
+			return "", nil
+		}
+		return "", errors.New("unexpected command: " + args[0])
+	}
+
+	err := updateKeychainTokens(&TokenCredentials{
+		AccessToken:  "new-access",
+		RefreshToken: "new-refresh",
+	})
+	if err != nil {
+		t.Fatalf("expected success, got error: %v", err)
+	}
+
+	// Verify the written JSON contains new tokens
+	var raw map[string]interface{}
+	if err := json.Unmarshal([]byte(writtenPassword), &raw); err != nil {
+		t.Fatalf("failed to parse written JSON: %v", err)
+	}
+
+	oauth := raw["claudeAiOauth"].(map[string]interface{})
+	if oauth["accessToken"] != "new-access" {
+		t.Errorf("expected new-access, got %v", oauth["accessToken"])
+	}
+	if oauth["refreshToken"] != "new-refresh" {
+		t.Errorf("expected new-refresh, got %v", oauth["refreshToken"])
+	}
+	// Verify extra fields preserved
+	scopes, ok := oauth["scopes"]
+	if !ok {
+		t.Error("expected scopes to be preserved")
+	} else {
+		scopeSlice := scopes.([]interface{})
+		if len(scopeSlice) != 1 || scopeSlice[0] != "user:inference" {
+			t.Errorf("expected scopes preserved, got %v", scopes)
+		}
+	}
+}
+
+func TestUpdateKeychainTokens_ReadError(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return "", errors.New("keychain not available")
+	}
+
+	err := updateKeychainTokens(&TokenCredentials{AccessToken: "new"})
+	if err == nil {
+		t.Error("expected error when keychain read fails")
 	}
 }
 

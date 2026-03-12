@@ -83,6 +83,56 @@ func getCredfileCredentials() (*TokenCredentials, error) {
 	return nil, errors.New("oauth: empty token in credentials file")
 }
 
+// updateCredfileTokens reads the existing credfile, updates the access and
+// refresh tokens, and writes it back. This preserves other fields like
+// scopes, subscriptionType, etc. that Claude Code manages.
+func updateCredfileTokens(creds *TokenCredentials) error {
+	path := credfilePathResolver()
+	if path == "" {
+		return errors.New("oauth: no credfile path")
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	// Parse into a generic map to preserve all fields
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	oauthRaw, ok := raw["claudeAiOauth"]
+	if !ok {
+		return errors.New("oauth: no claudeAiOauth in credfile")
+	}
+
+	var oauthMap map[string]json.RawMessage
+	if err := json.Unmarshal(oauthRaw, &oauthMap); err != nil {
+		return err
+	}
+
+	// Update tokens
+	accessJSON, _ := json.Marshal(creds.AccessToken)
+	refreshJSON, _ := json.Marshal(creds.RefreshToken)
+	oauthMap["accessToken"] = accessJSON
+	oauthMap["refreshToken"] = refreshJSON
+
+	updatedOAuth, err := json.Marshal(oauthMap)
+	if err != nil {
+		return err
+	}
+	raw["claudeAiOauth"] = updatedOAuth
+
+	updatedData, err := json.Marshal(raw)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, updatedData, 0o600)
+}
+
 func defaultCredfilePath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {

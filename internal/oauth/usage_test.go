@@ -391,6 +391,235 @@ func TestFetchUsage_RateLimitNoCacheFallsThrough(t *testing.T) {
 	}
 }
 
+// --- Token rotation tests ---
+
+// mockCredentialWriter prevents write-back to real credential stores in tests.
+func mockCredentialWriter(t *testing.T) func() {
+	t.Helper()
+	orig := credentialWriter
+	credentialWriter = func(creds *TokenCredentials) {}
+	return func() { credentialWriter = orig }
+}
+
+func TestFetchUsage_429_RotationSuccess(t *testing.T) {
+	defer mockCredentialWriter(t)()
+	dir := t.TempDir()
+	origDir := rotatedTokenDir
+	defer func() { rotatedTokenDir = origDir }()
+	rotatedTokenDir = dir
+
+	callCount := 0
+	fetcher := &mockFetcher{}
+	// Override FetchUsageData to return 429 on first call, success on second
+	dynamicFetcher := &dynamicMockFetcher{
+		fn: func(token string) (*UsageData, error) {
+			callCount++
+			if callCount == 1 {
+				return nil, &RateLimitError{RetryAfter: 30 * time.Second}
+			}
+			// Second call with rotated token
+			if token != "new-access-token" {
+				t.Errorf("expected retry with new-access-token, got %q", token)
+			}
+			return &UsageData{BlockPercentage: 88.0, WeeklyPercentage: 44.0}, nil
+		},
+	}
+	_ = fetcher
+
+	cache := &mockCache{
+		stored: &UsageData{BlockPercentage: 42.0, FetchedAt: time.Now().Add(-10 * time.Minute), IsStale: true},
+	}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token", RefreshToken: "old-refresh"}, nil
+	}
+
+	origRefresher := tokenRefresher
+	defer func() { tokenRefresher = origRefresher }()
+	tokenRefresher = func(refreshToken string) (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "new-access-token", RefreshToken: "new-refresh"}, nil
+	}
+
+	data, err := FetchUsage(dynamicFetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected data, got error: %v", err)
+	}
+	if data.BlockPercentage != 88.0 {
+		t.Errorf("expected 88.0 from rotated token, got %f", data.BlockPercentage)
+	}
+	if data.IsStale {
+		t.Error("expected fresh data after rotation")
+	}
+}
+
+func TestFetchUsage_429_RotationRetryFails(t *testing.T) {
+	defer mockCredentialWriter(t)()
+	dir := t.TempDir()
+	origDir := rotatedTokenDir
+	defer func() { rotatedTokenDir = origDir }()
+	rotatedTokenDir = dir
+
+	callCount := 0
+	dynamicFetcher := &dynamicMockFetcher{
+		fn: func(token string) (*UsageData, error) {
+			callCount++
+			// Both calls return 429
+			return nil, &RateLimitError{RetryAfter: 30 * time.Second}
+		},
+	}
+
+	staleData := &UsageData{BlockPercentage: 42.0, FetchedAt: time.Now().Add(-10 * time.Minute), IsStale: true}
+	cache := &mockCache{stored: staleData}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token", RefreshToken: "old-refresh"}, nil
+	}
+
+	origRefresher := tokenRefresher
+	defer func() { tokenRefresher = origRefresher }()
+	tokenRefresher = func(refreshToken string) (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "new-token", RefreshToken: "new-refresh"}, nil
+	}
+
+	data, err := FetchUsage(dynamicFetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale data when rotation retry fails")
+	}
+	if data.BlockPercentage != 42.0 {
+		t.Errorf("expected cache fallback 42.0, got %f", data.BlockPercentage)
+	}
+}
+
+func TestFetchUsage_429_RefreshFails(t *testing.T) {
+	defer mockCredentialWriter(t)()
+	dir := t.TempDir()
+	origDir := rotatedTokenDir
+	defer func() { rotatedTokenDir = origDir }()
+	rotatedTokenDir = dir
+
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 30 * time.Second},
+	}
+
+	staleData := &UsageData{BlockPercentage: 42.0, FetchedAt: time.Now().Add(-10 * time.Minute), IsStale: true}
+	cache := &mockCache{stored: staleData}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token", RefreshToken: "old-refresh"}, nil
+	}
+
+	origRefresher := tokenRefresher
+	defer func() { tokenRefresher = origRefresher }()
+	tokenRefresher = func(refreshToken string) (*TokenCredentials, error) {
+		return nil, &RefreshError{StatusCode: 400, Body: "invalid_grant"}
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale data when refresh fails")
+	}
+}
+
+func TestFetchUsage_429_NoRefreshToken(t *testing.T) {
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 30 * time.Second},
+	}
+
+	staleData := &UsageData{BlockPercentage: 42.0, FetchedAt: time.Now().Add(-10 * time.Minute), IsStale: true}
+	cache := &mockCache{stored: staleData}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token"}, nil // No refresh token
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale data when no refresh token")
+	}
+}
+
+func TestFetchUsage_429_RotationLockHeld(t *testing.T) {
+	dir := t.TempDir()
+	origDir := rotatedTokenDir
+	defer func() { rotatedTokenDir = origDir }()
+	rotatedTokenDir = dir
+
+	// Pre-acquire the rotation lock
+	acquired, release := TryRotationLock(dir)
+	if !acquired {
+		t.Fatal("expected to acquire lock")
+	}
+	defer release()
+
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 30 * time.Second},
+	}
+
+	staleData := &UsageData{BlockPercentage: 42.0, FetchedAt: time.Now().Add(-10 * time.Minute), IsStale: true}
+	cache := &mockCache{stored: staleData}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token", RefreshToken: "old-refresh"}, nil
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if !data.IsStale {
+		t.Error("expected stale data when rotation lock held")
+	}
+}
+
+func TestFetchUsage_429_NoCacheNoRefreshToken(t *testing.T) {
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 10 * time.Second},
+	}
+	cache := &mockCache{} // No cached data
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "old-token"}, nil // No refresh token
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err == nil {
+		t.Error("expected error when rate limited with no cache and no refresh token")
+	}
+	if data != nil {
+		t.Errorf("expected nil data, got %+v", data)
+	}
+}
+
+// dynamicMockFetcher allows different responses per call.
+type dynamicMockFetcher struct {
+	fn func(token string) (*UsageData, error)
+}
+
+func (d *dynamicMockFetcher) FetchUsageData(token string) (*UsageData, error) {
+	return d.fn(token)
+}
+
 func TestFetchUsageWithFileCache(t *testing.T) {
 	dir := t.TempDir()
 	fc := NewFileCache(dir, 1*time.Minute)

@@ -98,15 +98,20 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 	}
 	debug.Logf("usage", "API call failed: %v", err)
 
-	// On 429: re-store stale data with current timestamp to extend the TTL,
-	// preventing the next invocation from immediately retrying the API.
+	// On 429: attempt token rotation if refresh token is available.
 	var rle *RateLimitError
-	if errors.As(err, &rle) && cached != nil {
-		cached.IsStale = true
-		cached.FetchedAt = time.Now()
-		cache.Store(workspaceKey, cached)
-		debug.Logf("usage", "rate limited — extended cache TTL (block=%.1f%%)", cached.BlockPercentage)
-		return cached, nil
+	if errors.As(err, &rle) {
+		if rotatedData := tryTokenRotation(fetcher, cache, workspaceKey, creds); rotatedData != nil {
+			return rotatedData, nil
+		}
+		// Rotation failed or unavailable — extend cache TTL as fallback.
+		if cached != nil {
+			cached.IsStale = true
+			cached.FetchedAt = time.Now()
+			cache.Store(workspaceKey, cached)
+			debug.Logf("usage", "rate limited — extended cache TTL (block=%.1f%%)", cached.BlockPercentage)
+			return cached, nil
+		}
 	}
 
 	// API failed — serve stale or error.
@@ -117,4 +122,55 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 	}
 	debug.Logf("usage", "no cached data available — returning error")
 	return nil, errors.New("oauth: API failed and no cached data available")
+}
+
+// tryTokenRotation attempts to refresh the OAuth token and retry the API call.
+// Returns fresh UsageData on success, nil on any failure.
+func tryTokenRotation(fetcher UsageFetcher, cache LockableCache, workspaceKey string, creds *TokenCredentials) *UsageData {
+	if creds.RefreshToken == "" {
+		debug.Logf("usage", "no refresh token available — skipping rotation")
+		return nil
+	}
+
+	if rotatedTokenDir == "" {
+		debug.Logf("usage", "rotated token dir not set — skipping rotation")
+		return nil
+	}
+
+	// Acquire rotation lock to prevent concurrent refresh token consumption.
+	acquired, release := TryRotationLock(rotatedTokenDir)
+	if !acquired {
+		debug.Logf("usage", "rotation lock held — skipping rotation")
+		return nil
+	}
+	defer release()
+
+	debug.Logf("usage", "attempting token rotation...")
+	newCreds, err := tokenRefresher(creds.RefreshToken)
+	if err != nil {
+		debug.Logf("usage", "token refresh failed: %v", err)
+		return nil
+	}
+	debug.Logf("usage", "token refresh succeeded, storing rotated token...")
+
+	// Persist the new tokens to our cache file
+	if err := StoreRotatedToken(rotatedTokenDir, newCreds); err != nil {
+		debug.Logf("usage", "failed to store rotated token: %v", err)
+	}
+
+	// Write back to Claude Code's credential stores so it keeps working
+	credentialWriter(newCreds)
+
+	// Retry the API with the new token
+	debug.Logf("usage", "retrying API with rotated token...")
+	data, err := fetcher.FetchUsageData(newCreds.AccessToken)
+	if err != nil {
+		debug.Logf("usage", "retry after rotation failed: %v", err)
+		return nil
+	}
+
+	data.IsStale = false
+	cache.Store(workspaceKey, data)
+	debug.Logf("usage", "rotation success: block=%.1f%% weekly=%.1f%%", data.BlockPercentage, data.WeeklyPercentage)
+	return data
 }
