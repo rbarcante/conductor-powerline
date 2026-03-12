@@ -99,6 +99,94 @@ func TestCredfileClaudeCodeEmptyAccessToken(t *testing.T) {
 	}
 }
 
+// --- getCredfileCredentials tests ---
+
+func TestGetCredfileCredentials_WithRefreshToken(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	content := `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-access","refreshToken":"sk-ant-ort01-refresh","expiresAt":1771535255460}}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	creds, err := getCredfileCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oat01-access" {
+		t.Errorf("expected access token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "sk-ant-ort01-refresh" {
+		t.Errorf("expected refresh token, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetCredfileCredentials_WithoutRefreshToken(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	content := `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-access"}}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	creds, err := getCredfileCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oat01-access" {
+		t.Errorf("expected access token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "" {
+		t.Errorf("expected empty refresh token, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetCredfileCredentials_LegacyFormat(t *testing.T) {
+	dir := t.TempDir()
+	credPath := filepath.Join(dir, ".credentials.json")
+
+	content := `{"oauthToken":"sk-ant-oauth-legacy"}`
+	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return credPath }
+
+	creds, err := getCredfileCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oauth-legacy" {
+		t.Errorf("expected legacy token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "" {
+		t.Errorf("expected empty refresh token for legacy format, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetCredfileCredentials_MissingFile(t *testing.T) {
+	origResolver := credfilePathResolver
+	defer func() { credfilePathResolver = origResolver }()
+	credfilePathResolver = func() string { return "/nonexistent/.credentials.json" }
+
+	_, err := getCredfileCredentials()
+	if err == nil {
+		t.Error("expected error for missing file")
+	}
+}
+
 func TestCredfileEmptyToken(t *testing.T) {
 	dir := t.TempDir()
 	credPath := filepath.Join(dir, ".credentials.json")

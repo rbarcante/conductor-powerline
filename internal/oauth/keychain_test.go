@@ -69,6 +69,82 @@ func TestKeychainCommandError(t *testing.T) {
 	}
 }
 
+// --- getKeychainCredentials tests ---
+
+func TestGetKeychainCredentials_FullJSON(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-kc-access","refreshToken":"sk-ant-ort01-kc-refresh","expiresAt":1771535255460}}`, nil
+	}
+
+	creds, err := getKeychainCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oat01-kc-access" {
+		t.Errorf("expected access token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "sk-ant-ort01-kc-refresh" {
+		t.Errorf("expected refresh token, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetKeychainCredentials_RawToken(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return "sk-ant-oat01-raw-token-12345", nil
+	}
+
+	creds, err := getKeychainCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oat01-raw-token-12345" {
+		t.Errorf("expected raw token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "" {
+		t.Errorf("expected empty refresh token for raw token, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetKeychainCredentials_CommandError(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return "", errors.New("keychain error")
+	}
+
+	_, err := getKeychainCredentials()
+	if err == nil {
+		t.Error("expected error on command failure")
+	}
+}
+
+func TestGetKeychainCredentials_NoRefreshToken(t *testing.T) {
+	origRunner := keychainCommandRunner
+	defer func() { keychainCommandRunner = origRunner }()
+
+	keychainCommandRunner = func(args ...string) (string, error) {
+		return `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-no-refresh"}}`, nil
+	}
+
+	creds, err := getKeychainCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "sk-ant-oat01-no-refresh" {
+		t.Errorf("expected access token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "" {
+		t.Errorf("expected empty refresh token, got %q", creds.RefreshToken)
+	}
+}
+
 func TestKeychainEmptyOutput(t *testing.T) {
 	origRunner := keychainCommandRunner
 	defer func() { keychainCommandRunner = origRunner }()

@@ -12,7 +12,7 @@ import (
 const lockTimeout = 500 * time.Millisecond
 
 // tokenGetter is the function used to get the OAuth token.
-// It is a package-level variable to allow testing with mocks.
+// Deprecated: Use credentialsGetter instead for access to refresh tokens.
 var tokenGetter = GetToken
 
 // UsageCache defines the interface for caching usage data.
@@ -77,19 +77,19 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 	}
 
 	// 4. We hold the lock — fetch from the API.
-	debug.Logf("usage", "fetching token...")
-	token, err := tokenGetter()
+	debug.Logf("usage", "fetching credentials...")
+	creds, err := credentialsGetter()
 	if err != nil {
-		debug.Logf("usage", "token retrieval failed: %v", err)
+		debug.Logf("usage", "credential retrieval failed: %v", err)
 		if cached != nil {
 			cached.IsStale = true
 			return cached, nil
 		}
 		return nil, err
 	}
+	debug.Logf("usage", "credentials retrieved (hasRefresh=%v), calling API...", creds.RefreshToken != "")
 
-	debug.Logf("usage", "token retrieved, calling API...")
-	data, err := fetcher.FetchUsageData(token)
+	data, err := fetcher.FetchUsageData(creds.AccessToken)
 	if err == nil {
 		data.IsStale = false
 		cache.Store(workspaceKey, data)
@@ -97,6 +97,17 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 		return data, nil
 	}
 	debug.Logf("usage", "API call failed: %v", err)
+
+	// On 429: re-store stale data with current timestamp to extend the TTL,
+	// preventing the next invocation from immediately retrying the API.
+	var rle *RateLimitError
+	if errors.As(err, &rle) && cached != nil {
+		cached.IsStale = true
+		cached.FetchedAt = time.Now()
+		cache.Store(workspaceKey, cached)
+		debug.Logf("usage", "rate limited — extended cache TTL (block=%.1f%%)", cached.BlockPercentage)
+		return cached, nil
+	}
 
 	// API failed — serve stale or error.
 	if cached != nil {

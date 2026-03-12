@@ -73,6 +73,88 @@ func TestGetTokenFallbackToCredfile(t *testing.T) {
 	}
 }
 
+// --- GetCredentials tests ---
+
+func TestGetCredentials_PlatformRetriever(t *testing.T) {
+	origGetter := credentialsGetter
+	defer func() { credentialsGetter = origGetter }()
+
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "platform-token", RefreshToken: "platform-refresh"}, nil
+	}
+
+	creds, err := GetCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "platform-token" {
+		t.Errorf("expected platform-token, got %q", creds.AccessToken)
+	}
+	if creds.RefreshToken != "platform-refresh" {
+		t.Errorf("expected platform-refresh, got %q", creds.RefreshToken)
+	}
+}
+
+func TestGetCredentials_FallbackToCredfile(t *testing.T) {
+	origKeychain := keychainCredentialsRetriever
+	origCredfile := credfileCredentialsRetriever
+	defer func() {
+		keychainCredentialsRetriever = origKeychain
+		credfileCredentialsRetriever = origCredfile
+	}()
+
+	keychainCredentialsRetriever = func() (*TokenCredentials, error) {
+		return nil, errors.New("no keychain")
+	}
+	credfileCredentialsRetriever = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "credfile-token", RefreshToken: "credfile-refresh"}, nil
+	}
+
+	// Reset credentialsGetter to use the real dispatch logic
+	origGetter := credentialsGetter
+	defer func() { credentialsGetter = origGetter }()
+	credentialsGetter = getCredentialsDefault
+
+	creds, err := GetCredentials()
+	if err != nil {
+		t.Fatalf("expected credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "credfile-token" {
+		t.Errorf("expected credfile-token, got %q", creds.AccessToken)
+	}
+}
+
+func TestGetCredentials_AllFail(t *testing.T) {
+	origKeychain := keychainCredentialsRetriever
+	origCredfile := credfileCredentialsRetriever
+	origWincred := wincredRetriever
+	origSecretool := secretoolRetriever
+	defer func() {
+		keychainCredentialsRetriever = origKeychain
+		credfileCredentialsRetriever = origCredfile
+		wincredRetriever = origWincred
+		secretoolRetriever = origSecretool
+	}()
+
+	keychainCredentialsRetriever = func() (*TokenCredentials, error) {
+		return nil, errors.New("no keychain")
+	}
+	wincredRetriever = func() (string, error) { return "", errors.New("no wincred") }
+	secretoolRetriever = func() (string, error) { return "", errors.New("no secretool") }
+	credfileCredentialsRetriever = func() (*TokenCredentials, error) {
+		return nil, errors.New("no credfile")
+	}
+
+	origGetter := credentialsGetter
+	defer func() { credentialsGetter = origGetter }()
+	credentialsGetter = getCredentialsDefault
+
+	_, err := GetCredentials()
+	if err == nil {
+		t.Error("expected error when all credential sources fail")
+	}
+}
+
 func TestGetTokenAllFail(t *testing.T) {
 	origKeychain := keychainRetriever
 	origWincred := wincredRetriever

@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"errors"
+	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -81,9 +82,11 @@ func TestFetchUsageFreshFetch(t *testing.T) {
 	}
 	cache := &mockCache{}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err != nil {
@@ -114,9 +117,11 @@ func TestFetchUsageCacheHit(t *testing.T) {
 		},
 	}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err != nil {
@@ -143,9 +148,11 @@ func TestFetchUsageStaleFallback(t *testing.T) {
 		},
 	}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err != nil {
@@ -165,9 +172,11 @@ func TestFetchUsageFirstRunPlaceholder(t *testing.T) {
 	}
 	cache := &mockCache{}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err == nil {
@@ -182,9 +191,9 @@ func TestFetchUsageNoToken(t *testing.T) {
 	fetcher := &mockFetcher{}
 	cache := &mockCache{}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "", errors.New("no token") }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) { return nil, errors.New("no token") }
 
 	data, err := FetchUsage(fetcher, cache, "workspace-key")
 	if err == nil {
@@ -212,9 +221,11 @@ func TestFetchUsage_OnlyOneAPICallOnConcurrentExpiry(t *testing.T) {
 		callCount: &apiCalls,
 	}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
@@ -255,9 +266,11 @@ func TestFetchUsage_WaiterGetsRefreshedData(t *testing.T) {
 		callCount: &apiCalls,
 	}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	// After 80ms: write fresh data then release lock (simulates lock holder completing).
 	// Store is done before release so the waiter sees the refreshed data on Get().
@@ -283,6 +296,101 @@ func TestFetchUsage_WaiterGetsRefreshedData(t *testing.T) {
 	}
 }
 
+// TestTryLock_StaleLockRecovery verifies that an orphaned lock file older than
+// staleLockAge is automatically removed, allowing a new process to acquire the lock.
+func TestTryLock_StaleLockRecovery(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	// Acquire and "orphan" the lock by not calling the release function.
+	ok, _ := fc.TryLock("test-key")
+	if !ok {
+		t.Fatal("expected to acquire initial lock")
+	}
+
+	// A second TryLock should fail — the lock is fresh.
+	ok2, _ := fc.TryLock("test-key")
+	if ok2 {
+		t.Fatal("expected second TryLock to fail while lock is fresh")
+	}
+
+	// Backdate the lock file to make it appear stale.
+	lockFile := fc.lockPath("test-key")
+	staleTime := time.Now().Add(-(staleLockAge + 1*time.Second))
+	if err := os.Chtimes(lockFile, staleTime, staleTime); err != nil {
+		t.Fatalf("failed to backdate lock file: %v", err)
+	}
+
+	// Now TryLock should succeed — the stale lock is auto-removed.
+	ok3, release3 := fc.TryLock("test-key")
+	if !ok3 {
+		t.Fatal("expected TryLock to succeed after stale lock recovery")
+	}
+	release3()
+}
+
+// TestFetchUsage_RateLimitExtendsCacheTTL verifies that when the API returns
+// a 429 RateLimitError and stale cache exists, FetchUsage re-stores the stale
+// data with a refreshed timestamp (extending the TTL) to prevent immediate retry.
+func TestFetchUsage_RateLimitExtendsCacheTTL(t *testing.T) {
+	staleData := &UsageData{
+		BlockPercentage: 42.0,
+		FetchedAt:       time.Now().Add(-10 * time.Minute),
+		IsStale:         true,
+	}
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 30 * time.Second, Body: "rate limited"},
+	}
+	cache := &mockCache{stored: staleData}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err != nil {
+		t.Fatalf("expected stale data on rate limit, got error: %v", err)
+	}
+	if data.BlockPercentage != 42.0 {
+		t.Errorf("expected cached block 42.0, got %f", data.BlockPercentage)
+	}
+	if !data.IsStale {
+		t.Error("expected data marked as stale")
+	}
+	// Verify cache was re-stored with refreshed timestamp.
+	if cache.stored == nil {
+		t.Fatal("expected cache.Store to have been called")
+	}
+	if time.Since(cache.stored.FetchedAt) > 2*time.Second {
+		t.Errorf("expected refreshed FetchedAt (recent), got %v ago", time.Since(cache.stored.FetchedAt))
+	}
+}
+
+// TestFetchUsage_RateLimitNoCacheFallsThrough verifies that a 429 without
+// any cached data falls through to the generic error path.
+func TestFetchUsage_RateLimitNoCacheFallsThrough(t *testing.T) {
+	fetcher := &mockFetcher{
+		err: &RateLimitError{RetryAfter: 10 * time.Second},
+	}
+	cache := &mockCache{}
+
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
+
+	data, err := FetchUsage(fetcher, cache, "workspace-key")
+	if err == nil {
+		t.Error("expected error when rate limited with no cache")
+	}
+	if data != nil {
+		t.Errorf("expected nil data, got %+v", data)
+	}
+}
+
 func TestFetchUsageWithFileCache(t *testing.T) {
 	dir := t.TempDir()
 	fc := NewFileCache(dir, 1*time.Minute)
@@ -294,9 +402,11 @@ func TestFetchUsageWithFileCache(t *testing.T) {
 		},
 	}
 
-	origTokenGetter := tokenGetter
-	defer func() { tokenGetter = origTokenGetter }()
-	tokenGetter = func() (string, error) { return "test-token", nil }
+	origCredentialsGetter := credentialsGetter
+	defer func() { credentialsGetter = origCredentialsGetter }()
+	credentialsGetter = func() (*TokenCredentials, error) {
+		return &TokenCredentials{AccessToken: "test-token"}, nil
+	}
 
 	data, err := FetchUsage(fetcher, fc, "/home/user/my-project")
 	if err != nil {

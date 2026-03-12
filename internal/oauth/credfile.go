@@ -12,7 +12,9 @@ var credfilePathResolver = defaultCredfilePath
 
 // claudeAiOAuthEntry represents the nested OAuth object in Claude Code's credentials file.
 type claudeAiOAuthEntry struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresAt    int64  `json:"expiresAt"`
 }
 
 // credentialFile represents the JSON structure of ~/.claude/.credentials.json.
@@ -48,6 +50,37 @@ func getCredfileToken() (string, error) {
 	}
 
 	return "", errors.New("oauth: empty token in credentials file")
+}
+
+// getCredfileCredentials reads credentials from ~/.claude/.credentials.json,
+// returning both access token and refresh token (if present).
+func getCredfileCredentials() (*TokenCredentials, error) {
+	path := credfilePathResolver()
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var cred credentialFile
+	if err := json.Unmarshal(data, &cred); err != nil {
+		return nil, err
+	}
+
+	// Try Claude Code's nested format first
+	if cred.ClaudeAiOAuth != nil && cred.ClaudeAiOAuth.AccessToken != "" {
+		return &TokenCredentials{
+			AccessToken:  cred.ClaudeAiOAuth.AccessToken,
+			RefreshToken: cred.ClaudeAiOAuth.RefreshToken,
+		}, nil
+	}
+
+	// Fall back to legacy flat format (no refresh token available)
+	if cred.OAuthToken != "" {
+		return &TokenCredentials{AccessToken: cred.OAuthToken}, nil
+	}
+
+	return nil, errors.New("oauth: empty token in credentials file")
 }
 
 func defaultCredfilePath() string {
