@@ -84,21 +84,29 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache) (*UsageData, error) {
 	}
 	defer release()
 
-	// 3. Double-check: another process may have refreshed between step 1 and 2.
+	return fetchUnderLock(fetcher, cache, cached)
+}
+
+// fetchUnderLock performs the API fetch while holding the advisory lock.
+// It double-checks the cache, retrieves a token, calls the API, and handles
+// rate-limit backoff and stale fallback on any error path.
+func fetchUnderLock(fetcher UsageFetcher, cache LockableCache, cached *UsageData) (*UsageData, error) {
+	// Double-check: another process may have refreshed between step 1 and lock acquire.
 	cached = cache.Get(globalCacheKey)
 	if cached != nil && !cached.IsStale {
 		debug.Logf("usage", "cache fresh after lock acquire (double-check hit): block=%.1f%%", cached.BlockPercentage)
 		return cached, nil
 	}
 
-	// 4. We hold the lock — fetch from the API.
+	// Fetch from the API.
 	debug.Logf("usage", "fetching token...")
 	token, err := tokenGetter()
 	if err != nil {
 		debug.Logf("usage", "token retrieval failed: %v", err)
 		if cached != nil {
-			cached.IsStale = true
-			return cached, nil
+			result := *cached
+			result.IsStale = true
+			return &result, nil
 		}
 		return nil, err
 	}
@@ -123,9 +131,10 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache) (*UsageData, error) {
 
 	// API failed — serve stale or error.
 	if cached != nil {
-		cached.IsStale = true
-		debug.Logf("usage", "serving stale cached data after API failure (block=%.1f%%)", cached.BlockPercentage)
-		return cached, nil
+		result := *cached
+		result.IsStale = true
+		debug.Logf("usage", "serving stale cached data after API failure (block=%.1f%%)", result.BlockPercentage)
+		return &result, nil
 	}
 	debug.Logf("usage", "no cached data available — returning error")
 	return nil, errors.New("oauth: API failed and no cached data available")
@@ -142,10 +151,11 @@ func handleRateLimitBackoff(rle *RateLimitError, cached *UsageData, cache Lockab
 	if backoff < minRateLimitBackoff {
 		backoff = minRateLimitBackoff
 	}
+	now := time.Now()
 	result := *cached
 	result.IsStale = true
-	result.FetchedAt = time.Now()
-	result.RateLimitedUntil = time.Now().Add(backoff)
+	result.FetchedAt = now
+	result.RateLimitedUntil = now.Add(backoff)
 	cache.Store(globalCacheKey, &result)
 	debug.Logf("usage", "rate limited — backing off %v (block=%.1f%%)", backoff, result.BlockPercentage)
 	return &result

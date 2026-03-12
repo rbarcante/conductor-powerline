@@ -81,24 +81,27 @@ func (fc *FileCache) atomicWrite(path string, data []byte) error {
 		return err
 	}
 	tmpName := tmp.Name()
+	cleanup := true
+	defer func() {
+		if cleanup {
+			os.Remove(tmpName)
+		}
+	}()
 
 	if _, err := tmp.Write(data); err != nil {
 		tmp.Close()
-		os.Remove(tmpName)
 		return err
 	}
 	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
 		return err
 	}
 	if err := os.Chmod(tmpName, 0o600); err != nil {
-		os.Remove(tmpName)
 		return err
 	}
 	if err := os.Rename(tmpName, path); err != nil {
-		os.Remove(tmpName)
 		return err
 	}
+	cleanup = false
 	return nil
 }
 

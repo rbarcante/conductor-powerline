@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -351,6 +352,64 @@ func TestWaitForUnlock_Timeout(t *testing.T) {
 	done := fc.WaitForUnlock("mykey", 120*time.Millisecond)
 	if done {
 		t.Error("expected WaitForUnlock to return false (timeout)")
+	}
+}
+
+func TestAtomicWrite_ReadOnlyDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod semantics differ on Windows")
+	}
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	// Store data successfully first, then make dir read-only.
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+	fc.Store("before-readonly", data)
+
+	if err := os.Chmod(dir, 0o500); err != nil {
+		t.Fatalf("failed to chmod dir: %v", err)
+	}
+	defer os.Chmod(dir, 0o700) // restore so TempDir cleanup works
+
+	// Store should silently fail (graceful degradation).
+	fc.Store("after-readonly", data)
+
+	// The new key should not be retrievable.
+	got := fc.Get("after-readonly")
+	if got != nil {
+		t.Errorf("expected nil from read-only dir store, got %+v", got)
+	}
+}
+
+func TestAtomicWrite_TempFileCleanedUpOnError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod semantics differ on Windows")
+	}
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	// Store some data so the cache dir exists, then make destination unwritable
+	// by removing write permission from the target file path's directory won't work
+	// for rename. Instead, create a subdirectory as the rename target to force error.
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+
+	// Create a directory at the target file path to make Rename fail.
+	targetPath := fc.keyPath("conflict-key")
+	if err := os.MkdirAll(targetPath, 0o700); err != nil {
+		t.Fatalf("failed to create conflict dir: %v", err)
+	}
+
+	// Store should fail (rename onto a directory fails) but not leave .tmp-* files.
+	fc.Store("conflict-key", data)
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("failed to read dir: %v", err)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), ".tmp-") {
+			t.Errorf("temp file %q was not cleaned up after error", e.Name())
+		}
 	}
 }
 
