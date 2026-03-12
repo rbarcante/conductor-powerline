@@ -10,21 +10,21 @@ This plan outlines the implementation tasks for this track. Each task follows TD
 
 ## Phase 1 — Atomic Writes and Lock Infrastructure
 
-- [ ] Task: Write failing test `TestFileCacheConcurrentStore_NoCorruption` in `filecache_test.go`
-  - [ ] Spin up 10 goroutines all calling `Store()` concurrently
-  - [ ] After all complete, `Get()` must return valid, non-nil data (not a JSON parse error)
-  - [ ] Run `go test -race ./internal/oauth/...` — confirm test fails or race is detected
-- [ ] Task: Implement atomic writes in `FileCache.Store()`
-  - [ ] Replace `os.WriteFile(path, b, 0o600)` with: write to `os.CreateTemp(fc.dir, ".tmp-*")`, then `os.Rename(tmp, path)`
-  - [ ] Clean up temp file on error paths
-  - [ ] Run test — confirm it passes
-- [ ] Task: Add `TryLock(key string) (bool, func())` to `filecache.go`
-  - [ ] Lock file path: `keyPath(key) + ".lock"`
-  - [ ] Acquire via `os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL, 0o600)` — atomic on POSIX and Windows NTFS
-  - [ ] Return `(true, releaseFn)` if acquired; `(false, nil)` otherwise
-  - [ ] `releaseFn` calls `os.Remove(lockPath)`
-  - [ ] Add `WaitForUnlock(key string, timeout time.Duration) bool` — polls every 50 ms until lock file disappears or timeout
-  - [ ] Write tests: `TestTryLock_Acquire`, `TestTryLock_AlreadyLocked`, `TestWaitForUnlock_Timeout`, `TestWaitForUnlock_Released`
+- [x] Task: Write failing test `TestFileCacheConcurrentStore_NoCorruption` in `filecache_test.go`
+  - [x] Spin up 10 goroutines all calling `Store()` concurrently
+  - [x] After all complete, `Get()` must return valid, non-nil data (not a JSON parse error)
+  - [x] Run `go test -race ./internal/oauth/...` — confirm test fails or race is detected
+- [x] Task: Implement atomic writes in `FileCache.Store()`
+  - [x] Replace `os.WriteFile(path, b, 0o600)` with: write to `os.CreateTemp(fc.dir, ".tmp-*")`, then `os.Rename(tmp, path)`
+  - [x] Clean up temp file on error paths
+  - [x] Run test — confirm it passes
+- [x] Task: Add `TryLock(key string) (bool, func())` to `filecache.go`
+  - [x] Lock file path: `keyPath(key) + ".lock"`
+  - [x] Acquire via `os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL, 0o600)` — atomic on POSIX and Windows NTFS
+  - [x] Return `(true, releaseFn)` if acquired; `(false, nil)` otherwise
+  - [x] `releaseFn` calls `os.Remove(lockPath)`
+  - [x] Add `WaitForUnlock(key string, timeout time.Duration) bool` — polls every 50 ms until lock file disappears or timeout
+  - [x] Write tests: `TestTryLock_Acquire`, `TestTryLock_AlreadyLocked`, `TestWaitForUnlock_Timeout`, `TestWaitForUnlock_Released`
 - [ ] Task: Conductor - User Manual Verification 'Phase 1 - Atomic Writes and Lock Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2 — Thundering Herd Fix in FetchUsage
