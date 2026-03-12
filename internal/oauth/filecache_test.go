@@ -176,6 +176,9 @@ func TestFileCacheCleanupRemovesOldFiles(t *testing.T) {
 		}
 	}
 
+	// Advance counter so the next Store triggers cleanup (runs every 10th call)
+	fc.storeCount.Store(int64(cleanupInterval - 1))
+
 	// Trigger cleanup via Store
 	fc.Store("trigger-cleanup", data)
 
@@ -197,12 +200,50 @@ func TestFileCacheCleanupKeepsRecentFiles(t *testing.T) {
 	fc.Store("project-2", data)
 	fc.Store("project-3", data)
 
+	// Advance counter so the next Store triggers cleanup
+	fc.storeCount.Store(int64(cleanupInterval - 1))
+
 	// Trigger cleanup
 	fc.Store("project-4", data)
 
 	entries, _ := os.ReadDir(dir)
 	if len(entries) != 4 {
 		t.Errorf("expected 4 files (all recent), got %d", len(entries))
+	}
+}
+
+func TestFileCacheCleanupProbabilistic(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+
+	// Store an entry and backdate it to be old enough for cleanup
+	fc.Store("old-project", data)
+	entries, _ := os.ReadDir(dir)
+	oldTime := time.Now().Add(-8 * 24 * time.Hour)
+	for _, e := range entries {
+		_ = os.Chtimes(filepath.Join(dir, e.Name()), oldTime, oldTime)
+	}
+
+	// Store 8 more times — none should trigger cleanup (counter starts at 1, needs 10)
+	for i := 0; i < 8; i++ {
+		fc.Store("new-project", data)
+	}
+
+	// Old file should still exist (cleanup hasn't run yet)
+	got := fc.Get("old-project")
+	if got == nil {
+		t.Error("expected old file to survive — cleanup should not have run yet")
+	}
+
+	// The 10th Store (total) should trigger cleanup
+	fc.Store("tenth-store", data)
+
+	// Old file should now be cleaned up
+	got = fc.Get("old-project")
+	if got != nil {
+		t.Error("expected old file to be cleaned up after 10th Store call")
 	}
 }
 

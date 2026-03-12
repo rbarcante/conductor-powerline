@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // credfilePathResolver returns the path to the credentials file.
@@ -25,124 +26,47 @@ type credentialFile struct {
 	OAuthToken    string              `json:"oauthToken"`
 }
 
-// getCredfileToken reads the Claude OAuth token from ~/.claude/.credentials.json.
-func getCredfileToken() (string, error) {
-	creds, err := getCredfileCredentials()
-	if err != nil {
-		return "", err
-	}
-	return creds.AccessToken, nil
-}
-
-// getCredfileCredentials reads credentials from ~/.claude/.credentials.json,
-// returning both access token and refresh token (if present).
-func getCredfileCredentials() (*TokenCredentials, error) {
-	path := credfilePathResolver()
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+// extractTokenFromCredentialJSON parses credential JSON data and extracts the
+// OAuth access token. Supports Claude Code's nested format, legacy flat format,
+// and raw token strings prefixed with "sk-ant-oat".
+func extractTokenFromCredentialJSON(data []byte) (string, error) {
+	raw := strings.TrimSpace(string(data))
+	if raw == "" {
+		return "", errors.New("oauth: empty credential data")
 	}
 
 	var cred credentialFile
 	if err := json.Unmarshal(data, &cred); err != nil {
-		return nil, err
+		// If it's not JSON, check if it's a raw token
+		if strings.HasPrefix(raw, "sk-ant-oat") {
+			return raw, nil
+		}
+		return "", errors.New("oauth: could not parse credential data")
 	}
 
 	// Try Claude Code's nested format first
 	if cred.ClaudeAiOAuth != nil && cred.ClaudeAiOAuth.AccessToken != "" {
-		return &TokenCredentials{
-			AccessToken:  cred.ClaudeAiOAuth.AccessToken,
-			RefreshToken: cred.ClaudeAiOAuth.RefreshToken,
-		}, nil
+		return cred.ClaudeAiOAuth.AccessToken, nil
 	}
 
-	// Fall back to legacy flat format (no refresh token available)
+	// Fall back to legacy flat format
 	if cred.OAuthToken != "" {
-		return &TokenCredentials{AccessToken: cred.OAuthToken}, nil
+		return cred.OAuthToken, nil
 	}
 
-	return nil, errors.New("oauth: empty token in credentials file")
+	return "", errors.New("oauth: no access token in credential data")
 }
 
-// updateCredfileTokens reads the existing credfile, updates the access and
-// refresh tokens, and writes it back atomically. This preserves other fields
-// like scopes, subscriptionType, etc. that Claude Code manages.
-func updateCredfileTokens(creds *TokenCredentials) error {
+// getCredfileToken reads the Claude OAuth token from ~/.claude/.credentials.json.
+func getCredfileToken() (string, error) {
 	path := credfilePathResolver()
-	if path == "" {
-		return errors.New("oauth: no credfile path")
-	}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	updatedData, err := mergeTokensIntoJSON(data, creds)
-	if err != nil {
-		return err
-	}
-
-	// Atomic write: temp file + rename to avoid corrupting the credfile on crash
-	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".tmp-cred-*")
-	if err != nil {
-		return err
-	}
-	tmpName := tmp.Name()
-
-	if _, err := tmp.Write(updatedData); err != nil {
-		tmp.Close()
-		os.Remove(tmpName)
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
-		return err
-	}
-	if err := os.Chmod(tmpName, 0o600); err != nil {
-		os.Remove(tmpName)
-		return err
-	}
-	if err := os.Rename(tmpName, path); err != nil {
-		os.Remove(tmpName)
-		return err
-	}
-	return nil
-}
-
-// mergeTokensIntoJSON updates the access and refresh tokens in a Claude Code
-// credential JSON blob, preserving all other fields (scopes, subscriptionType, etc.).
-func mergeTokensIntoJSON(data []byte, creds *TokenCredentials) ([]byte, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	oauthRaw, ok := raw["claudeAiOauth"]
-	if !ok {
-		return nil, errors.New("oauth: no claudeAiOauth in credential data")
-	}
-
-	var oauthMap map[string]json.RawMessage
-	if err := json.Unmarshal(oauthRaw, &oauthMap); err != nil {
-		return nil, err
-	}
-
-	// json.Marshal on a plain string cannot fail
-	accessJSON, _ := json.Marshal(creds.AccessToken)
-	refreshJSON, _ := json.Marshal(creds.RefreshToken)
-	oauthMap["accessToken"] = accessJSON
-	oauthMap["refreshToken"] = refreshJSON
-
-	updatedOAuth, err := json.Marshal(oauthMap)
-	if err != nil {
-		return nil, err
-	}
-	raw["claudeAiOauth"] = updatedOAuth
-
-	return json.Marshal(raw)
+	return extractTokenFromCredentialJSON(data)
 }
 
 func defaultCredfilePath() string {

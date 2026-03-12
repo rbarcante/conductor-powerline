@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/rbarcante/conductor-powerline/internal/debug"
@@ -25,11 +26,15 @@ type fileCacheEntry struct {
 	TTL      string    `json:"ttl"`
 }
 
+// cleanupInterval controls how often cleanup runs: once every N Store calls.
+const cleanupInterval = 10
+
 // FileCache persists usage data to disk, keyed by workspace path hash.
 // Each workspace gets its own JSON file under the cache directory.
 type FileCache struct {
-	dir string
-	ttl time.Duration
+	dir        string
+	ttl        time.Duration
+	storeCount atomic.Int64
 }
 
 // NewFileCache creates a file-based cache rooted at dir with the given TTL.
@@ -63,7 +68,9 @@ func (fc *FileCache) Store(key string, data *UsageData) {
 		debug.Logf("filecache", "write error: %v", err)
 	}
 
-	fc.cleanup()
+	if fc.storeCount.Add(1)%cleanupInterval == 0 {
+		fc.cleanup()
+	}
 }
 
 // atomicWrite writes data to a temp file then renames it to path, ensuring readers

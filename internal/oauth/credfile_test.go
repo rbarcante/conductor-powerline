@@ -1,11 +1,77 @@
 package oauth
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestExtractTokenFromCredentialJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		data    string
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "claude code nested format",
+			data: `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-test","refreshToken":"rt"}}`,
+			want: "sk-ant-oat01-test",
+		},
+		{
+			name: "legacy flat format",
+			data: `{"oauthToken":"sk-ant-oauth-legacy"}`,
+			want: "sk-ant-oauth-legacy",
+		},
+		{
+			name: "raw token prefix",
+			data: "sk-ant-oat01-raw-token-12345",
+			want: "sk-ant-oat01-raw-token-12345",
+		},
+		{
+			name:    "malformed JSON",
+			data:    "{not valid json}",
+			wantErr: true,
+		},
+		{
+			name:    "empty data",
+			data:    "",
+			wantErr: true,
+		},
+		{
+			name:    "whitespace only",
+			data:    "  \n  ",
+			wantErr: true,
+		},
+		{
+			name:    "empty access token",
+			data:    `{"claudeAiOauth":{"accessToken":"","refreshToken":"rt"}}`,
+			wantErr: true,
+		},
+		{
+			name:    "no token fields",
+			data:    `{"someOtherField":"value"}`,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := extractTokenFromCredentialJSON([]byte(tt.data))
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got token %q", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("expected %q, got %q", tt.want, got)
+			}
+		})
+	}
+}
 
 func TestCredfileValidJSON(t *testing.T) {
 	dir := t.TempDir()
@@ -97,155 +163,6 @@ func TestCredfileClaudeCodeEmptyAccessToken(t *testing.T) {
 	_, err := getCredfileToken()
 	if err == nil {
 		t.Error("expected error for empty accessToken in Claude Code format")
-	}
-}
-
-// --- getCredfileCredentials tests ---
-
-func TestGetCredfileCredentials_WithRefreshToken(t *testing.T) {
-	dir := t.TempDir()
-	credPath := filepath.Join(dir, ".credentials.json")
-
-	content := `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-access","refreshToken":"sk-ant-ort01-refresh","expiresAt":1771535255460}}`
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
-		t.Fatalf("failed to write test file: %v", err)
-	}
-
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return credPath }
-
-	creds, err := getCredfileCredentials()
-	if err != nil {
-		t.Fatalf("expected credentials, got error: %v", err)
-	}
-	if creds.AccessToken != "sk-ant-oat01-access" {
-		t.Errorf("expected access token, got %q", creds.AccessToken)
-	}
-	if creds.RefreshToken != "sk-ant-ort01-refresh" {
-		t.Errorf("expected refresh token, got %q", creds.RefreshToken)
-	}
-}
-
-func TestGetCredfileCredentials_WithoutRefreshToken(t *testing.T) {
-	dir := t.TempDir()
-	credPath := filepath.Join(dir, ".credentials.json")
-
-	content := `{"claudeAiOauth":{"accessToken":"sk-ant-oat01-access"}}`
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
-		t.Fatalf("failed to write test file: %v", err)
-	}
-
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return credPath }
-
-	creds, err := getCredfileCredentials()
-	if err != nil {
-		t.Fatalf("expected credentials, got error: %v", err)
-	}
-	if creds.AccessToken != "sk-ant-oat01-access" {
-		t.Errorf("expected access token, got %q", creds.AccessToken)
-	}
-	if creds.RefreshToken != "" {
-		t.Errorf("expected empty refresh token, got %q", creds.RefreshToken)
-	}
-}
-
-func TestGetCredfileCredentials_LegacyFormat(t *testing.T) {
-	dir := t.TempDir()
-	credPath := filepath.Join(dir, ".credentials.json")
-
-	content := `{"oauthToken":"sk-ant-oauth-legacy"}`
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
-		t.Fatalf("failed to write test file: %v", err)
-	}
-
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return credPath }
-
-	creds, err := getCredfileCredentials()
-	if err != nil {
-		t.Fatalf("expected credentials, got error: %v", err)
-	}
-	if creds.AccessToken != "sk-ant-oauth-legacy" {
-		t.Errorf("expected legacy token, got %q", creds.AccessToken)
-	}
-	if creds.RefreshToken != "" {
-		t.Errorf("expected empty refresh token for legacy format, got %q", creds.RefreshToken)
-	}
-}
-
-func TestGetCredfileCredentials_MissingFile(t *testing.T) {
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return "/nonexistent/.credentials.json" }
-
-	_, err := getCredfileCredentials()
-	if err == nil {
-		t.Error("expected error for missing file")
-	}
-}
-
-// --- updateCredfileTokens tests ---
-
-func TestUpdateCredfileTokens(t *testing.T) {
-	dir := t.TempDir()
-	credPath := filepath.Join(dir, ".credentials.json")
-
-	// Write a credfile with extra fields that should be preserved
-	content := `{"claudeAiOauth":{"accessToken":"old-access","refreshToken":"old-refresh","expiresAt":1771535255460,"scopes":["user:inference"],"subscriptionType":"max"}}`
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return credPath }
-
-	err := updateCredfileTokens(&TokenCredentials{
-		AccessToken:  "new-access",
-		RefreshToken: "new-refresh",
-	})
-	if err != nil {
-		t.Fatalf("expected success, got error: %v", err)
-	}
-
-	// Verify the file was updated
-	data, _ := os.ReadFile(credPath)
-	var raw map[string]interface{}
-	json.Unmarshal(data, &raw)
-
-	oauth := raw["claudeAiOauth"].(map[string]interface{})
-	if oauth["accessToken"] != "new-access" {
-		t.Errorf("expected new-access, got %v", oauth["accessToken"])
-	}
-	if oauth["refreshToken"] != "new-refresh" {
-		t.Errorf("expected new-refresh, got %v", oauth["refreshToken"])
-	}
-	// Verify extra fields preserved
-	if oauth["subscriptionType"] != "max" {
-		t.Errorf("expected subscriptionType preserved, got %v", oauth["subscriptionType"])
-	}
-}
-
-func TestUpdateCredfileTokens_NoClaudeAiOauth(t *testing.T) {
-	dir := t.TempDir()
-	credPath := filepath.Join(dir, ".credentials.json")
-
-	content := `{"oauthToken":"legacy-token"}`
-	if err := os.WriteFile(credPath, []byte(content), 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	origResolver := credfilePathResolver
-	defer func() { credfilePathResolver = origResolver }()
-	credfilePathResolver = func() string { return credPath }
-
-	err := updateCredfileTokens(&TokenCredentials{AccessToken: "new"})
-	if err == nil {
-		t.Error("expected error for legacy format without claudeAiOauth")
 	}
 }
 

@@ -1,7 +1,6 @@
 package oauth
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -14,19 +13,6 @@ import (
 )
 
 const version = "conductor-powerline/1.0.0"
-
-// oauthClientID is the public client_id for Claude Code's OAuth application.
-const oauthClientID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
-
-// oauthTokenURL is the token endpoint for refreshing OAuth tokens.
-const oauthTokenURL = "https://console.anthropic.com/v1/oauth/token"
-
-// refreshTimeout is the HTTP timeout for token refresh requests.
-const refreshTimeout = 5 * time.Second
-
-// tokenRefresher is the function used to refresh an OAuth token.
-// Package-level variable for testability.
-var tokenRefresher = defaultRefreshOAuthToken
 
 // maxResponseBody is the maximum size of an API response body (64KB).
 const maxResponseBody = 64 * 1024
@@ -70,101 +56,6 @@ func parseRetryAfter(value string) time.Duration {
 	return 0
 }
 
-// RefreshError is returned when the token refresh endpoint responds with
-// HTTP 400 or 401, indicating the refresh token is invalid or expired.
-type RefreshError struct {
-	StatusCode int
-	Body       string
-}
-
-func (e *RefreshError) Error() string {
-	return fmt.Sprintf("oauth: token refresh failed (HTTP %d): %s", e.StatusCode, e.Body)
-}
-
-// refreshRequest is the JSON body sent to the token refresh endpoint.
-type refreshRequest struct {
-	GrantType    string `json:"grant_type"`
-	RefreshToken string `json:"refresh_token"`
-	ClientID     string `json:"client_id"`
-}
-
-// refreshResponse is the JSON response from the token refresh endpoint.
-type refreshResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-// defaultRefreshOAuthToken calls the production token endpoint.
-func defaultRefreshOAuthToken(refreshToken string) (*TokenCredentials, error) {
-	return makeRefreshOAuthToken(oauthTokenURL)(refreshToken)
-}
-
-// makeRefreshOAuthToken returns a refresh function targeting the given URL.
-// This factory enables tests to use httptest servers.
-func makeRefreshOAuthToken(baseURL string) func(string) (*TokenCredentials, error) {
-	transport := &http.Transport{
-		ForceAttemptHTTP2: false,
-		TLSNextProto:      make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
-		MaxIdleConns:      1,
-	}
-	client := &http.Client{
-		Timeout:   refreshTimeout,
-		Transport: transport,
-	}
-
-	return func(refreshToken string) (*TokenCredentials, error) {
-		reqBody := refreshRequest{
-			GrantType:    "refresh_token",
-			RefreshToken: refreshToken,
-			ClientID:     oauthClientID,
-		}
-		bodyBytes, err := json.Marshal(reqBody)
-		if err != nil {
-			return nil, err
-		}
-
-		req, err := http.NewRequest("POST", baseURL, bytes.NewReader(bodyBytes))
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", version)
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer func() { _ = resp.Body.Close() }()
-
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxResponseBody))
-
-		if resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnauthorized {
-			return nil, &RefreshError{
-				StatusCode: resp.StatusCode,
-				Body:       string(respBody),
-			}
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("oauth: token refresh returned status %d", resp.StatusCode)
-		}
-
-		var tokenResp refreshResponse
-		if err := json.Unmarshal(respBody, &tokenResp); err != nil {
-			return nil, fmt.Errorf("oauth: failed to parse refresh response: %w", err)
-		}
-
-		if tokenResp.AccessToken == "" {
-			return nil, fmt.Errorf("oauth: refresh response missing access_token")
-		}
-
-		return &TokenCredentials{
-			AccessToken:  tokenResp.AccessToken,
-			RefreshToken: tokenResp.RefreshToken,
-		}, nil
-	}
-}
-
 // NewClient creates a new API client with the given base URL and timeout.
 // The transport forces HTTP/1.1 to avoid rate-limit issues observed with
 // Go's default HTTP/2 in short-lived processes (new TLS handshake each run).
@@ -206,7 +97,7 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", version)
 	req.Header.Set("anthropic-beta", "oauth-2025-04-20")
 
@@ -247,6 +138,11 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		return nil, err
 	}
 
+	return mapAPIResponse(&apiResp), nil
+}
+
+// mapAPIResponse converts an apiResponse into a UsageData struct.
+func mapAPIResponse(apiResp *apiResponse) *UsageData {
 	data := &UsageData{
 		FetchedAt: time.Now(),
 	}
@@ -276,5 +172,5 @@ func (c *Client) FetchUsageData(token string) (*UsageData, error) {
 		data.SonnetPercentage = apiResp.SevenDaySonnet.Utilization
 	}
 
-	return data, nil
+	return data
 }

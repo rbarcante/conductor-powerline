@@ -11,6 +11,13 @@ import (
 // lock holder to finish before giving up and returning whatever is in cache.
 const lockTimeout = 500 * time.Millisecond
 
+// minRateLimitBackoff is the minimum backoff duration after a 429 response.
+const minRateLimitBackoff = 60 * time.Second
+
+// globalCacheKey is the single cache key for usage data. Usage is account-level,
+// not per-workspace, so all sessions share one cache entry.
+const globalCacheKey = "__global_usage__"
+
 // UsageCache defines the interface for caching usage data.
 // Both the in-memory Cache and file-based FileCache satisfy this interface.
 type UsageCache interface {
@@ -30,10 +37,13 @@ type LockableCache interface {
 	WaitForUnlock(key string, timeout time.Duration) bool
 }
 
+// tokenGetter retrieves the OAuth access token. Package-level variable for testability.
+var tokenGetter = GetToken
+
 // FetchUsage retrieves usage data using a cache-first, lock-guarded strategy:
 //
 //  1. Return immediately if cache has fresh (non-stale) data.
-//  2. Try to acquire the advisory lock for this workspace key.
+//  2. Try to acquire the advisory lock for the global cache key.
 //     - If the lock is already held (another session is refreshing):
 //     wait up to lockTimeout, then return whatever is in cache (stale ok).
 //     - If the lock is acquired:
@@ -42,21 +52,30 @@ type LockableCache interface {
 //
 // All error paths preserve the existing silent-failure / graceful-degradation
 // behaviour: stale data is preferred over an error wherever possible.
-func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) (*UsageData, error) {
+func FetchUsage(fetcher UsageFetcher, cache LockableCache) (*UsageData, error) {
 	// 1. Cache-first: serve fresh data without touching the network.
-	cached := cache.Get(workspaceKey)
+	cached := cache.Get(globalCacheKey)
 	if cached != nil && !cached.IsStale {
 		debug.Logf("usage", "cache hit (fresh): block=%.1f%% weekly=%.1f%%", cached.BlockPercentage, cached.WeeklyPercentage)
 		return cached, nil
 	}
 
+	// 1b. Respect rate-limit backoff: if we were recently 429'd, serve stale data
+	// instead of hammering the API again before the server's Retry-After window.
+	if cached != nil && !cached.RateLimitedUntil.IsZero() && time.Now().Before(cached.RateLimitedUntil) {
+		debug.Logf("usage", "rate-limit backoff active (until %v), serving stale data", cached.RateLimitedUntil.Format("15:04:05"))
+		result := *cached
+		result.IsStale = true
+		return &result, nil
+	}
+
 	// 2. Try to become the one process that refreshes the cache.
-	acquired, release := cache.TryLock(workspaceKey)
+	acquired, release := cache.TryLock(globalCacheKey)
 	if !acquired {
 		// Another process is already refreshing — wait briefly then serve cache.
 		debug.Logf("usage", "lock busy, waiting up to %v for another session to refresh", lockTimeout)
-		cache.WaitForUnlock(workspaceKey, lockTimeout)
-		result := cache.Get(workspaceKey)
+		cache.WaitForUnlock(globalCacheKey, lockTimeout)
+		result := cache.Get(globalCacheKey)
 		if result == nil {
 			return nil, errors.New("oauth: no cached data available after waiting for lock")
 		}
@@ -66,47 +85,39 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 	defer release()
 
 	// 3. Double-check: another process may have refreshed between step 1 and 2.
-	cached = cache.Get(workspaceKey)
+	cached = cache.Get(globalCacheKey)
 	if cached != nil && !cached.IsStale {
 		debug.Logf("usage", "cache fresh after lock acquire (double-check hit): block=%.1f%%", cached.BlockPercentage)
 		return cached, nil
 	}
 
 	// 4. We hold the lock — fetch from the API.
-	debug.Logf("usage", "fetching credentials...")
-	creds, err := credentialsGetter()
+	debug.Logf("usage", "fetching token...")
+	token, err := tokenGetter()
 	if err != nil {
-		debug.Logf("usage", "credential retrieval failed: %v", err)
+		debug.Logf("usage", "token retrieval failed: %v", err)
 		if cached != nil {
 			cached.IsStale = true
 			return cached, nil
 		}
 		return nil, err
 	}
-	debug.Logf("usage", "credentials retrieved (hasRefresh=%v), calling API...", creds.RefreshToken != "")
+	debug.Logf("usage", "token retrieved, calling API...")
 
-	data, err := fetcher.FetchUsageData(creds.AccessToken)
+	data, err := fetcher.FetchUsageData(token)
 	if err == nil {
 		data.IsStale = false
-		cache.Store(workspaceKey, data)
+		cache.Store(globalCacheKey, data)
 		debug.Logf("usage", "API success: block=%.1f%% weekly=%.1f%%", data.BlockPercentage, data.WeeklyPercentage)
 		return data, nil
 	}
 	debug.Logf("usage", "API call failed: %v", err)
 
-	// On 429: attempt token rotation if refresh token is available.
+	// On 429: back off for RetryAfter duration.
 	var rle *RateLimitError
 	if errors.As(err, &rle) {
-		if rotatedData := tryTokenRotation(fetcher, cache, workspaceKey, creds); rotatedData != nil {
-			return rotatedData, nil
-		}
-		// Rotation failed or unavailable — extend cache TTL as fallback.
-		if cached != nil {
-			cached.IsStale = true
-			cached.FetchedAt = time.Now()
-			cache.Store(workspaceKey, cached)
-			debug.Logf("usage", "rate limited — extended cache TTL (block=%.1f%%)", cached.BlockPercentage)
-			return cached, nil
+		if result := handleRateLimitBackoff(rle, cached, cache); result != nil {
+			return result, nil
 		}
 	}
 
@@ -120,53 +131,22 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache, workspaceKey string) 
 	return nil, errors.New("oauth: API failed and no cached data available")
 }
 
-// tryTokenRotation attempts to refresh the OAuth token and retry the API call.
-// Returns fresh UsageData on success, nil on any failure.
-func tryTokenRotation(fetcher UsageFetcher, cache LockableCache, workspaceKey string, creds *TokenCredentials) *UsageData {
-	if creds.RefreshToken == "" {
-		debug.Logf("usage", "no refresh token available — skipping rotation")
+// handleRateLimitBackoff processes a 429 rate-limit response by copying the
+// cached data (to avoid mutating the shared pointer), setting backoff fields,
+// and re-storing it. Returns nil if there is no cached data to fall back on.
+func handleRateLimitBackoff(rle *RateLimitError, cached *UsageData, cache LockableCache) *UsageData {
+	if cached == nil {
 		return nil
 	}
-
-	if rotatedTokenDir == "" {
-		debug.Logf("usage", "rotated token dir not set — skipping rotation")
-		return nil
+	backoff := rle.RetryAfter
+	if backoff < minRateLimitBackoff {
+		backoff = minRateLimitBackoff
 	}
-
-	// Acquire rotation lock to prevent concurrent refresh token consumption.
-	acquired, release := TryRotationLock(rotatedTokenDir)
-	if !acquired {
-		debug.Logf("usage", "rotation lock held — skipping rotation")
-		return nil
-	}
-	defer release()
-
-	debug.Logf("usage", "attempting token rotation...")
-	newCreds, err := tokenRefresher(creds.RefreshToken)
-	if err != nil {
-		debug.Logf("usage", "token refresh failed: %v", err)
-		return nil
-	}
-	debug.Logf("usage", "token refresh succeeded, storing rotated token...")
-
-	// Persist the new tokens to our cache file
-	if err := StoreRotatedToken(rotatedTokenDir, newCreds); err != nil {
-		debug.Logf("usage", "failed to store rotated token: %v", err)
-	}
-
-	// Write back to Claude Code's credential stores so it keeps working
-	credentialWriter(newCreds)
-
-	// Retry the API with the new token
-	debug.Logf("usage", "retrying API with rotated token...")
-	data, err := fetcher.FetchUsageData(newCreds.AccessToken)
-	if err != nil {
-		debug.Logf("usage", "retry after rotation failed: %v", err)
-		return nil
-	}
-
-	data.IsStale = false
-	cache.Store(workspaceKey, data)
-	debug.Logf("usage", "rotation success: block=%.1f%% weekly=%.1f%%", data.BlockPercentage, data.WeeklyPercentage)
-	return data
+	result := *cached
+	result.IsStale = true
+	result.FetchedAt = time.Now()
+	result.RateLimitedUntil = time.Now().Add(backoff)
+	cache.Store(globalCacheKey, &result)
+	debug.Logf("usage", "rate limited — backing off %v (block=%.1f%%)", backoff, result.BlockPercentage)
+	return &result
 }

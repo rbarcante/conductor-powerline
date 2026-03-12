@@ -1,9 +1,7 @@
 package oauth
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -235,10 +233,9 @@ func TestClient429NoRetryAfter(t *testing.T) {
 }
 
 func TestClientNon200DrainsBody(t *testing.T) {
-	bodySent := `{"error":"internal_error","message":"something went wrong"}`
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(bodySent))
+		_, _ = w.Write([]byte(`{"error":"internal_error","message":"something went wrong"}`))
 	}))
 	defer server.Close()
 
@@ -248,6 +245,60 @@ func TestClientNon200DrainsBody(t *testing.T) {
 		t.Fatal("expected error on 500 response")
 	}
 	// The body is drained internally (for connection reuse) — we just verify no panic/hang.
+}
+
+func TestMapAPIResponse(t *testing.T) {
+	t.Run("full response", func(t *testing.T) {
+		resp := &apiResponse{
+			FiveHour:       &usageBucket{ResetsAt: "2026-02-19T18:00:00Z", Utilization: 72.5},
+			SevenDay:       &usageBucket{ResetsAt: "2026-02-23T00:00:00Z", Utilization: 45.0},
+			SevenDayOpus:   &usageBucket{ResetsAt: "2026-02-23T00:00:00Z", Utilization: 30.0},
+			SevenDaySonnet: &usageBucket{ResetsAt: "2026-02-23T00:00:00Z", Utilization: 15.0},
+		}
+		data := mapAPIResponse(resp)
+		if data.BlockPercentage != 72.5 {
+			t.Errorf("expected block 72.5, got %f", data.BlockPercentage)
+		}
+		if data.WeeklyPercentage != 45.0 {
+			t.Errorf("expected weekly 45.0, got %f", data.WeeklyPercentage)
+		}
+		if data.OpusPercentage != 30.0 {
+			t.Errorf("expected opus 30.0, got %f", data.OpusPercentage)
+		}
+		if data.SonnetPercentage != 15.0 {
+			t.Errorf("expected sonnet 15.0, got %f", data.SonnetPercentage)
+		}
+		if data.BlockResetTime.IsZero() {
+			t.Error("expected non-zero BlockResetTime")
+		}
+		if data.FetchedAt.IsZero() {
+			t.Error("expected non-zero FetchedAt")
+		}
+	})
+
+	t.Run("nil buckets", func(t *testing.T) {
+		resp := &apiResponse{}
+		data := mapAPIResponse(resp)
+		if data.BlockPercentage != 0 {
+			t.Errorf("expected block 0, got %f", data.BlockPercentage)
+		}
+		if data.WeeklyPercentage != 0 {
+			t.Errorf("expected weekly 0, got %f", data.WeeklyPercentage)
+		}
+	})
+
+	t.Run("malformed resets_at", func(t *testing.T) {
+		resp := &apiResponse{
+			FiveHour: &usageBucket{ResetsAt: "not-a-date", Utilization: 60.0},
+		}
+		data := mapAPIResponse(resp)
+		if data.BlockPercentage != 60.0 {
+			t.Errorf("expected block 60.0, got %f", data.BlockPercentage)
+		}
+		if !data.BlockResetTime.IsZero() {
+			t.Errorf("expected zero BlockResetTime for malformed date, got %v", data.BlockResetTime)
+		}
+	})
 }
 
 func TestParseRetryAfter(t *testing.T) {
@@ -272,161 +323,11 @@ func TestParseRetryAfter(t *testing.T) {
 	}
 }
 
-// --- RefreshOAuthToken tests ---
-
-func TestRefreshError_Error(t *testing.T) {
-	re := &RefreshError{StatusCode: 400, Body: "invalid_grant"}
-	msg := re.Error()
-	if msg == "" {
-		t.Error("expected non-empty error message")
-	}
-}
-
 func TestRateLimitError_Error(t *testing.T) {
 	rle := &RateLimitError{RetryAfter: 30 * time.Second, Body: "rate limited"}
 	msg := rle.Error()
 	if msg == "" {
 		t.Error("expected non-empty error message")
-	}
-}
-
-func TestRefreshOAuthToken_Success(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			t.Errorf("expected POST, got %s", r.Method)
-		}
-		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
-			t.Errorf("expected Content-Type application/json, got %q", ct)
-		}
-
-		body, _ := io.ReadAll(r.Body)
-		var req map[string]string
-		if err := json.Unmarshal(body, &req); err != nil {
-			t.Fatalf("failed to parse request body: %v", err)
-		}
-		if req["grant_type"] != "refresh_token" {
-			t.Errorf("expected grant_type=refresh_token, got %q", req["grant_type"])
-		}
-		if req["refresh_token"] != "old-refresh-token" {
-			t.Errorf("expected refresh_token=old-refresh-token, got %q", req["refresh_token"])
-		}
-		if req["client_id"] != oauthClientID {
-			t.Errorf("expected client_id=%s, got %q", oauthClientID, req["client_id"])
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"access_token":"new-access","refresh_token":"new-refresh"}`))
-	}))
-	defer server.Close()
-
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken(server.URL)
-
-	creds, err := tokenRefresher("old-refresh-token")
-	if err != nil {
-		t.Fatalf("expected success, got error: %v", err)
-	}
-	if creds.AccessToken != "new-access" {
-		t.Errorf("expected new-access, got %q", creds.AccessToken)
-	}
-	if creds.RefreshToken != "new-refresh" {
-		t.Errorf("expected new-refresh, got %q", creds.RefreshToken)
-	}
-}
-
-func TestRefreshOAuthToken_InvalidToken(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(`{"error":"invalid_grant"}`))
-	}))
-	defer server.Close()
-
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken(server.URL)
-
-	_, err := tokenRefresher("bad-refresh-token")
-	if err == nil {
-		t.Fatal("expected error for invalid token")
-	}
-	var re *RefreshError
-	if !errors.As(err, &re) {
-		t.Fatalf("expected *RefreshError, got %T: %v", err, err)
-	}
-	if re.StatusCode != 400 {
-		t.Errorf("expected status 400, got %d", re.StatusCode)
-	}
-}
-
-func TestRefreshOAuthToken_Unauthorized(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-	}))
-	defer server.Close()
-
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken(server.URL)
-
-	_, err := tokenRefresher("bad-refresh-token")
-	var re *RefreshError
-	if !errors.As(err, &re) {
-		t.Fatalf("expected *RefreshError, got %T: %v", err, err)
-	}
-	if re.StatusCode != 401 {
-		t.Errorf("expected status 401, got %d", re.StatusCode)
-	}
-}
-
-func TestRefreshOAuthToken_NetworkError(t *testing.T) {
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken("http://localhost:1") // connection refused
-
-	_, err := tokenRefresher("some-token")
-	if err == nil {
-		t.Fatal("expected error for network failure")
-	}
-	var re *RefreshError
-	if errors.As(err, &re) {
-		t.Error("expected generic error, not RefreshError")
-	}
-}
-
-func TestRefreshOAuthToken_EmptyAccessToken(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"access_token":"","refresh_token":"new-refresh"}`))
-	}))
-	defer server.Close()
-
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken(server.URL)
-
-	_, err := tokenRefresher("some-token")
-	if err == nil {
-		t.Fatal("expected error for empty access_token in response")
-	}
-}
-
-func TestRefreshOAuthToken_MalformedResponse(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{not valid json`))
-	}))
-	defer server.Close()
-
-	origRefresher := tokenRefresher
-	defer func() { tokenRefresher = origRefresher }()
-	tokenRefresher = makeRefreshOAuthToken(server.URL)
-
-	_, err := tokenRefresher("some-token")
-	if err == nil {
-		t.Fatal("expected error for malformed response")
 	}
 }
 
