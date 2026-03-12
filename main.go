@@ -68,7 +68,7 @@ func run() error {
 	// 5. Set rotated token dir before fetching usage
 	oauth.SetRotatedTokenDir(cacheDir())
 
-	// 6. Fetch usage data and workflow data concurrently
+	// 5b. Fetch usage data and workflow data concurrently
 	var usageData *oauth.UsageData
 	var workflowData *segments.WorkflowData
 	var wg sync.WaitGroup

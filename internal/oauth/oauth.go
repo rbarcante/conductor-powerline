@@ -88,11 +88,8 @@ func getCredentialsDefault() (*TokenCredentials, error) {
 		}
 	}
 
-	var platformName string
-
 	switch runtime.GOOS {
 	case "darwin":
-		platformName = "keychain"
 		debug.Logf("creds", "trying keychain credentials retriever")
 		creds, err := keychainCredentialsRetriever()
 		if err == nil {
@@ -101,7 +98,6 @@ func getCredentialsDefault() (*TokenCredentials, error) {
 		}
 		debug.Logf("creds", "keychain credentials failed: %v", err)
 	case "windows":
-		platformName = "wincred"
 		debug.Logf("creds", "trying wincred (plain token only)")
 		token, err := wincredRetriever()
 		if err == nil {
@@ -110,7 +106,6 @@ func getCredentialsDefault() (*TokenCredentials, error) {
 		}
 		debug.Logf("creds", "wincred failed: %v", err)
 	case "linux":
-		platformName = "secret-tool"
 		debug.Logf("creds", "trying secret-tool (plain token only)")
 		token, err := secretoolRetriever()
 		if err == nil {
@@ -118,11 +113,7 @@ func getCredentialsDefault() (*TokenCredentials, error) {
 			return &TokenCredentials{AccessToken: token}, nil
 		}
 		debug.Logf("creds", "secret-tool failed: %v", err)
-	default:
-		platformName = "unknown"
 	}
-
-	_ = platformName
 
 	// Fallback to credential file
 	debug.Logf("creds", "trying credfile fallback")

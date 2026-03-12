@@ -154,6 +154,10 @@ func makeRefreshOAuthToken(baseURL string) func(string) (*TokenCredentials, erro
 			return nil, fmt.Errorf("oauth: failed to parse refresh response: %w", err)
 		}
 
+		if tokenResp.AccessToken == "" {
+			return nil, fmt.Errorf("oauth: refresh response missing access_token")
+		}
+
 		return &TokenCredentials{
 			AccessToken:  tokenResp.AccessToken,
 			RefreshToken: tokenResp.RefreshToken,

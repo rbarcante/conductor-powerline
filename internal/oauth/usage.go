@@ -11,10 +11,6 @@ import (
 // lock holder to finish before giving up and returning whatever is in cache.
 const lockTimeout = 500 * time.Millisecond
 
-// tokenGetter is the function used to get the OAuth token.
-// Deprecated: Use credentialsGetter instead for access to refresh tokens.
-var tokenGetter = GetToken
-
 // UsageCache defines the interface for caching usage data.
 // Both the in-memory Cache and file-based FileCache satisfy this interface.
 type UsageCache interface {

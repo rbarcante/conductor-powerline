@@ -396,6 +396,23 @@ func TestRefreshOAuthToken_NetworkError(t *testing.T) {
 	}
 }
 
+func TestRefreshOAuthToken_EmptyAccessToken(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"access_token":"","refresh_token":"new-refresh"}`))
+	}))
+	defer server.Close()
+
+	origRefresher := tokenRefresher
+	defer func() { tokenRefresher = origRefresher }()
+	tokenRefresher = makeRefreshOAuthToken(server.URL)
+
+	_, err := tokenRefresher("some-token")
+	if err == nil {
+		t.Fatal("expected error for empty access_token in response")
+	}
+}
+
 func TestRefreshOAuthToken_MalformedResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
