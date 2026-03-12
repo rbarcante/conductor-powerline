@@ -124,6 +124,47 @@ func TestGetCredentials_FallbackToCredfile(t *testing.T) {
 	}
 }
 
+func TestGetCredentials_RotatedTokenFirst(t *testing.T) {
+	dir := t.TempDir()
+
+	// Store a rotated token
+	if err := StoreRotatedToken(dir, &TokenCredentials{
+		AccessToken: "rotated-access", RefreshToken: "rotated-refresh",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	origDir := rotatedTokenDir
+	defer func() { rotatedTokenDir = origDir }()
+	rotatedTokenDir = dir
+
+	origGetter := credentialsGetter
+	defer func() { credentialsGetter = origGetter }()
+	credentialsGetter = getCredentialsDefault
+
+	// Mock all other sources to fail
+	origKeychain := keychainCredentialsRetriever
+	origCredfile := credfileCredentialsRetriever
+	defer func() {
+		keychainCredentialsRetriever = origKeychain
+		credfileCredentialsRetriever = origCredfile
+	}()
+	keychainCredentialsRetriever = func() (*TokenCredentials, error) {
+		return nil, errors.New("no keychain")
+	}
+	credfileCredentialsRetriever = func() (*TokenCredentials, error) {
+		return nil, errors.New("no credfile")
+	}
+
+	creds, err := GetCredentials()
+	if err != nil {
+		t.Fatalf("expected rotated credentials, got error: %v", err)
+	}
+	if creds.AccessToken != "rotated-access" {
+		t.Errorf("expected rotated-access, got %q", creds.AccessToken)
+	}
+}
+
 func TestGetCredentials_AllFail(t *testing.T) {
 	origKeychain := keychainCredentialsRetriever
 	origCredfile := credfileCredentialsRetriever

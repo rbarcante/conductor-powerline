@@ -76,9 +76,18 @@ func GetCredentials() (*TokenCredentials, error) {
 	return credentialsGetter()
 }
 
-// getCredentialsDefault is the real implementation of credential retrieval
-// that tries platform-specific stores, then falls back to credfile.
+// getCredentialsDefault is the real implementation of credential retrieval.
+// Checks rotated token file first, then platform-specific stores, then credfile.
 func getCredentialsDefault() (*TokenCredentials, error) {
+	// Check for a previously rotated token first
+	if rotatedTokenDir != "" {
+		creds, err := LoadRotatedToken(rotatedTokenDir)
+		if err == nil && creds != nil {
+			debug.Logf("creds", "using rotated token from disk (hasRefresh=%v)", creds.RefreshToken != "")
+			return creds, nil
+		}
+	}
+
 	var platformName string
 
 	switch runtime.GOOS {
