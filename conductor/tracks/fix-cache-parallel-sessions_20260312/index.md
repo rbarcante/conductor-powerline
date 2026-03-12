@@ -7,6 +7,7 @@
 - [Specification](./spec.md) - Requirements and acceptance criteria
 - [Implementation Plan](./plan.md) - Task breakdown and progress
 - [Decisions](./decisions.md) - Architecture Decision Records (ADRs)
+- [Review](./review.md) - Automated code review report
 - [Metadata](./metadata.json) - Track metadata and status
 
 ## Quick Links

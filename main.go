@@ -75,7 +75,6 @@ func run() error {
 		defer wg.Done()
 		client := oauth.NewClient(anthropicUsageURL, cfg.APITimeout.Duration)
 		cache := oauth.NewFileCache(cacheDir(), cfg.CacheTTL.Duration)
-		workspace := hookData.WorkspacePath()
 		data, err := oauth.FetchUsage(client, cache, workspace)
 		if err == nil {
 			usageData = data
