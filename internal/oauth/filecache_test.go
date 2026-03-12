@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 )
@@ -202,6 +203,113 @@ func TestFileCacheCleanupKeepsRecentFiles(t *testing.T) {
 	entries, _ := os.ReadDir(dir)
 	if len(entries) != 4 {
 		t.Errorf("expected 4 files (all recent), got %d", len(entries))
+	}
+}
+
+func TestFileCacheConcurrentStore_NoCorruption(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	data := &UsageData{BlockPercentage: 77.0, FetchedAt: time.Now()}
+
+	// 10 goroutines all write to the same key concurrently
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			fc.Store("shared-key", data)
+		}()
+	}
+	wg.Wait()
+
+	// After all writes, Get must return valid (non-nil) data
+	got := fc.Get("shared-key")
+	if got == nil {
+		t.Fatal("concurrent Store corrupted the cache file: Get returned nil")
+	}
+	if got.BlockPercentage != 77.0 {
+		t.Errorf("expected block 77.0, got %f", got.BlockPercentage)
+	}
+}
+
+func TestTryLock_Acquire(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	ok, release := fc.TryLock("mykey")
+	if !ok {
+		t.Fatal("expected to acquire lock, got false")
+	}
+	if release == nil {
+		t.Fatal("expected non-nil release function")
+	}
+	release()
+
+	// After release, should be acquirable again
+	ok2, release2 := fc.TryLock("mykey")
+	if !ok2 {
+		t.Fatal("expected to re-acquire lock after release")
+	}
+	release2()
+}
+
+func TestTryLock_AlreadyLocked(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	ok, release := fc.TryLock("mykey")
+	if !ok {
+		t.Fatal("expected first acquire to succeed")
+	}
+	defer release()
+
+	// Second acquire must fail while first is held
+	ok2, release2 := fc.TryLock("mykey")
+	if ok2 {
+		release2()
+		t.Fatal("expected second acquire to fail while lock is held")
+	}
+	if release2 != nil {
+		t.Error("expected nil release function when lock not acquired")
+	}
+}
+
+func TestWaitForUnlock_Released(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	ok, release := fc.TryLock("mykey")
+	if !ok {
+		t.Fatal("expected to acquire lock")
+	}
+
+	// Release the lock after a short delay
+	go func() {
+		time.Sleep(80 * time.Millisecond)
+		release()
+	}()
+
+	done := fc.WaitForUnlock("mykey", 500*time.Millisecond)
+	if !done {
+		t.Error("expected WaitForUnlock to return true (lock was released)")
+	}
+}
+
+func TestWaitForUnlock_Timeout(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	ok, release := fc.TryLock("mykey")
+	if !ok {
+		t.Fatal("expected to acquire lock")
+	}
+	defer release()
+
+	// Lock is never released — should timeout
+	done := fc.WaitForUnlock("mykey", 120*time.Millisecond)
+	if done {
+		t.Error("expected WaitForUnlock to return false (timeout)")
 	}
 }
 

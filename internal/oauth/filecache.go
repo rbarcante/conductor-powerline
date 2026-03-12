@@ -11,6 +11,8 @@ import (
 	"github.com/rbarcante/conductor-powerline/internal/debug"
 )
 
+const lockPollInterval = 50 * time.Millisecond
+
 // fileCacheEntry is the on-disk JSON structure for cached usage data.
 type fileCacheEntry struct {
 	Data     UsageData `json:"data"`
@@ -52,11 +54,40 @@ func (fc *FileCache) Store(key string, data *UsageData) {
 	}
 
 	path := fc.keyPath(key)
-	if err := os.WriteFile(path, b, 0o600); err != nil {
+	if err := fc.atomicWrite(path, b); err != nil {
 		debug.Logf("filecache", "write error: %v", err)
 	}
 
 	fc.cleanup()
+}
+
+// atomicWrite writes data to a temp file then renames it to path, ensuring readers
+// never see a partial write. The temp file is cleaned up on any error.
+func (fc *FileCache) atomicWrite(path string, data []byte) error {
+	tmp, err := os.CreateTemp(fc.dir, ".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpName)
+		return err
+	}
+	if err := os.Chmod(tmpName, 0o600); err != nil {
+		os.Remove(tmpName)
+		return err
+	}
+	if err := os.Rename(tmpName, path); err != nil {
+		os.Remove(tmpName)
+		return err
+	}
+	return nil
 }
 
 // cleanupMaxAge is the maximum age for cache files before they are removed.
@@ -110,4 +141,47 @@ func (fc *FileCache) Get(key string) *UsageData {
 func (fc *FileCache) keyPath(key string) string {
 	h := sha256.Sum256([]byte(key))
 	return filepath.Join(fc.dir, fmt.Sprintf("%x.json", h))
+}
+
+// lockPath returns the path for the lock file associated with the given key.
+func (fc *FileCache) lockPath(key string) string {
+	return fc.keyPath(key) + ".lock"
+}
+
+// TryLock attempts to acquire an exclusive lock for the given key using an
+// O_EXCL file creation — atomic on both POSIX and Windows NTFS.
+// Returns (true, releaseFn) on success; (false, nil) if already locked.
+// The caller must call releaseFn to release the lock.
+func (fc *FileCache) TryLock(key string) (bool, func()) {
+	if err := os.MkdirAll(fc.dir, 0o700); err != nil {
+		return false, nil
+	}
+	lockFile := fc.lockPath(key)
+	f, err := os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		// File already exists — lock is held by another process
+		return false, nil
+	}
+	f.Close()
+	release := func() {
+		os.Remove(lockFile)
+	}
+	return true, release
+}
+
+// WaitForUnlock polls every lockPollInterval until the lock file for key
+// disappears or the timeout elapses. Returns true if the lock was released
+// before the timeout, false if the timeout expired first.
+func (fc *FileCache) WaitForUnlock(key string, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	lockFile := fc.lockPath(key)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(lockFile); os.IsNotExist(err) {
+			return true
+		}
+		time.Sleep(lockPollInterval)
+	}
+	// Final check after sleep
+	_, err := os.Stat(lockFile)
+	return os.IsNotExist(err)
 }
