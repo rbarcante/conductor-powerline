@@ -26,7 +26,7 @@ func DefaultConfig() Config {
 		},
 		SegmentOrder:   []string{"directory", "git", "model", "block", "weekly", "context", "conductor", "conductor_workflow"},
 		APITimeout:     Duration{5 * time.Second},
-		CacheTTL:       Duration{30 * time.Second},
+		CacheTTL:       Duration{60 * time.Second},
 		TrendThreshold: 2.0,
 	}
 }
