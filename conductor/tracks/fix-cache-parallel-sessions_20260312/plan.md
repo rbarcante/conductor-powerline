@@ -29,14 +29,14 @@ This plan outlines the implementation tasks for this track. Each task follows TD
 
 ## Phase 2 — Thundering Herd Fix in FetchUsage
 
-- [ ] Task: Write failing tests in `usage_test.go`
-  - [ ] `TestFetchUsage_OnlyOneAPICallOnConcurrentExpiry`: mock cache returning stale data; mock API callable once; run 5 goroutines concurrently calling `FetchUsage`; assert API was called exactly once
-  - [ ] `TestFetchUsage_WaiterGetsRefreshedData`: lock is pre-held; API writes fresh cache after 100 ms; assert waiting goroutine returns updated value without making its own API call
-  - [ ] Run tests — confirm they fail
-- [ ] Task: Modify `FetchUsage()` in `usage.go` to use lock-before-fetch pattern
-  - [ ] Add `UsageLockCache` interface extension (or add `TryLock`/`WaitForUnlock` methods to the `UsageCache` interface) — evaluate cleanest approach; keep interface minimal
-  - [ ] Flow: `Get()` → if fresh return; try `TryLock()` → if not acquired `WaitForUnlock(500ms)` then `Get()` and return (stale ok); if acquired do double-check `Get()` (another process may have just written it) → call API → `Store()` → release lock
-  - [ ] Run tests — confirm they pass and race detector is clean
+- [x] Task: Write failing tests in `usage_test.go`
+  - [x] `TestFetchUsage_OnlyOneAPICallOnConcurrentExpiry`: mock cache returning stale data; mock API callable once; run 5 goroutines concurrently calling `FetchUsage`; assert API was called exactly once
+  - [x] `TestFetchUsage_WaiterGetsRefreshedData`: lock is pre-held; API writes fresh cache after 100 ms; assert waiting goroutine returns updated value without making its own API call
+  - [x] Run tests — confirm they fail
+- [x] Task: Modify `FetchUsage()` in `usage.go` to use lock-before-fetch pattern
+  - [x] Add `LockableCache` interface extending `UsageCache` with `TryLock`/`WaitForUnlock`
+  - [x] Flow: `Get()` → if fresh return; try `TryLock()` → if not acquired `WaitForUnlock(500ms)` then `Get()` and return (stale ok); if acquired do double-check `Get()` (another process may have just written it) → call API → `Store()` → release lock
+  - [x] Run tests — confirm they pass and race detector is clean
 - [ ] Task: Conductor - User Manual Verification 'Phase 2 - Thundering Herd Fix in FetchUsage' (Protocol in workflow.md)
 
 ## Phase 3 — Conductor CLI Workflow Caching
