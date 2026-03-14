@@ -43,7 +43,14 @@ func run() error {
 	debug.Logf("main", "hook parsed: model=%s workspace=%s", hookData.ModelID(), hookData.WorkspacePath())
 
 	// 2. Load config (project → user → defaults)
-	projectCfg := filepath.Join(".", ".conductor-powerline.json")
+	// Prefer hookData.WorkspacePath() (explicit project from Claude Code hook JSON)
+	// with os.Getwd() as fallback for project config loading.
+	projectDir := hookData.WorkspacePath()
+	if projectDir == "" {
+		projectDir, _ = os.Getwd()
+	}
+	projectCfg := filepath.Join(projectDir, ".conductor-powerline.json")
+	debug.Logf("main", "project config path: %s", projectCfg)
 	userCfg := ""
 	if home, err := os.UserHomeDir(); err == nil {
 		userCfg = filepath.Join(home, ".claude", "conductor-powerline.json")
