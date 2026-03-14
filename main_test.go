@@ -256,10 +256,12 @@ func TestIntegrationConductorSegmentDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
+	// Use cfgDir as the workspace so config is loaded from workspace path
+	escapedCfgDir := strings.ReplaceAll(cfgDir, `\`, `\\`)
+	input := `{"model":"claude-opus-4-6","workspace":"` + escapedCfgDir + `"}`
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
-	cmd.Dir = cfgDir // run from dir with config file
+	cmd.Env = append(os.Environ(), "XDG_CACHE_HOME="+t.TempDir())
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("run failed: %v", err)
@@ -381,10 +383,12 @@ func TestIntegrationWorkflowSecondLineDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	input := `{"model":"claude-opus-4-6","workspace":"/tmp/my-project"}`
+	// Use cfgDir as the workspace so config is loaded from workspace path
+	escapedCfgDir := strings.ReplaceAll(cfgDir, `\`, `\\`)
+	input := `{"model":"claude-opus-4-6","workspace":"` + escapedCfgDir + `"}`
 	cmd := exec.Command(binPath)
 	cmd.Stdin = strings.NewReader(input)
-	cmd.Dir = cfgDir
+	cmd.Env = append(os.Environ(), "XDG_CACHE_HOME="+t.TempDir())
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("run failed: %v", err)
@@ -395,6 +399,84 @@ func TestIntegrationWorkflowSecondLineDisabled(t *testing.T) {
 	// Line 2 is disabled; output must not have trailing newline
 	if strings.HasSuffix(output, "\n") {
 		t.Error("output must not have trailing newline when workflow disabled")
+	}
+}
+
+func TestIntegrationProjectConfigFromWorkspacePath(t *testing.T) {
+	// Build the binary
+	binPath := t.TempDir() + "/" + binName()
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	// Create a workspace dir with a config that disables the model segment
+	workspaceDir := t.TempDir()
+	cfgContent := `{"segments":{"model":{"enabled":false}}}`
+	if err := os.WriteFile(filepath.Join(workspaceDir, ".conductor-powerline.json"), []byte(cfgContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Run from a DIFFERENT directory (CWD != workspace) — this is the key scenario
+	cwdDir := t.TempDir()
+
+	escapedWorkspace := strings.ReplaceAll(workspaceDir, `\`, `\\`)
+	input := `{"model":"claude-opus-4-6","workspace":"` + escapedWorkspace + `"}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Dir = cwdDir // CWD is different from workspace
+	cmd.Env = append(os.Environ(), "XDG_CACHE_HOME="+t.TempDir())
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// Model segment should NOT appear because workspace config disabled it
+	if strings.Contains(output, "Opus 4.6") {
+		t.Errorf("expected model segment disabled by workspace config, but found 'Opus 4.6' in output: %q", output)
+	}
+	// Directory segment should still appear (workspace basename)
+	baseName := filepath.Base(workspaceDir)
+	if !strings.Contains(output, baseName) {
+		t.Errorf("expected workspace directory '%s' in output: %q", baseName, output)
+	}
+}
+
+func TestIntegrationProjectConfigFallbackToCWD(t *testing.T) {
+	// Build the binary
+	binPath := t.TempDir() + "/" + binName()
+	build := exec.Command("go", "build", "-o", binPath, ".")
+	build.Dir = "."
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build failed: %v\n%s", err, out)
+	}
+
+	// Create a CWD dir with a config that disables the model segment
+	cwdDir := t.TempDir()
+	cfgContent := `{"segments":{"model":{"enabled":false}}}`
+	if err := os.WriteFile(filepath.Join(cwdDir, ".conductor-powerline.json"), []byte(cfgContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Run with empty workspace — should fall back to CWD for config
+	input := `{"model":"claude-opus-4-6"}`
+	cmd := exec.Command(binPath)
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Dir = cwdDir
+	cmd.Env = append(os.Environ(), "XDG_CACHE_HOME="+t.TempDir())
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("run failed: %v", err)
+	}
+
+	output := string(out)
+
+	// Model segment should NOT appear because CWD config disabled it
+	if strings.Contains(output, "Opus 4.6") {
+		t.Errorf("expected model segment disabled by CWD config, but found 'Opus 4.6' in output: %q", output)
 	}
 }
 
