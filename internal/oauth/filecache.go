@@ -63,13 +63,14 @@ func (fc *FileCache) Store(key string, data *UsageData) {
 const cleanupMaxAge = 7 * 24 * time.Hour
 
 // cleanup removes cache files not modified in the last 7 days.
+// The lock file (.lock) is excluded from cleanup.
 func (fc *FileCache) cleanup() {
 	entries, err := os.ReadDir(fc.dir)
 	if err != nil {
 		return
 	}
 	for _, e := range entries {
-		if e.IsDir() {
+		if e.IsDir() || e.Name() == ".lock" {
 			continue
 		}
 		info, err := e.Info()
@@ -103,6 +104,38 @@ func (fc *FileCache) Get(key string) *UsageData {
 		result.IsStale = true
 	}
 	return &result
+}
+
+// Touch resets the StoredAt timestamp of a cache entry to now,
+// so it won't be considered stale until the full TTL elapses again.
+// This is used when another process holds the lock — we mark the entry
+// as "recently checked" to avoid retrying until TTL expires.
+func (fc *FileCache) Touch(key string) {
+	path := fc.keyPath(key)
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		debug.Logf("filecache", "touch: cannot read %s: %v", key, err)
+		return
+	}
+
+	var entry fileCacheEntry
+	if err := json.Unmarshal(b, &entry); err != nil {
+		debug.Logf("filecache", "touch: unmarshal error for %s: %v", key, err)
+		return
+	}
+
+	entry.StoredAt = time.Now()
+
+	b, err = json.Marshal(entry)
+	if err != nil {
+		debug.Logf("filecache", "touch: marshal error: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(path, b, 0o600); err != nil {
+		debug.Logf("filecache", "touch: write error: %v", err)
+	}
 }
 
 // keyPath returns the file path for a given workspace key.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/rbarcante/conductor-powerline/internal/config"
 	"github.com/rbarcante/conductor-powerline/internal/debug"
@@ -20,6 +21,10 @@ import (
 )
 
 const anthropicUsageURL = "https://api.anthropic.com/api/oauth/usage"
+
+// lockStaleBuffer is added to APITimeout to determine when a lock file is
+// considered abandoned. Accounts for network jitter and OS scheduling delays.
+const lockStaleBuffer = 10 * time.Second
 
 func main() {
 	debug.Init()
@@ -80,10 +85,11 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		dir := cacheDir()
 		client := oauth.NewClient(anthropicUsageURL, cfg.APITimeout.Duration)
-		cache := oauth.NewFileCache(cacheDir(), cfg.CacheTTL.Duration)
-		workspace := hookData.WorkspacePath()
-		data, err := oauth.FetchUsage(client, cache, workspace)
+		cache := oauth.NewFileCache(dir, cfg.CacheTTL.Duration)
+		lock := oauth.NewCacheLock(dir, cfg.APITimeout.Duration+lockStaleBuffer)
+		data, err := oauth.FetchUsage(client, cache, "global-usage", lock)
 		if err == nil {
 			usageData = data
 		} else {
