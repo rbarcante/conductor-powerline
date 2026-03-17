@@ -84,7 +84,7 @@ func (fc *FileCache) atomicWrite(path string, data []byte) error {
 	cleanup := true
 	defer func() {
 		if cleanup {
-			os.Remove(tmpName)
+			_ = os.Remove(tmpName)
 		}
 	}()
 
