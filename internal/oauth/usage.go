@@ -84,15 +84,15 @@ func FetchUsage(fetcher UsageFetcher, cache LockableCache) (*UsageData, error) {
 	}
 	defer release()
 
-	return fetchUnderLock(fetcher, cache, cached)
+	return fetchUnderLock(fetcher, cache)
 }
 
 // fetchUnderLock performs the API fetch while holding the advisory lock.
 // It double-checks the cache, retrieves a token, calls the API, and handles
 // rate-limit backoff and stale fallback on any error path.
-func fetchUnderLock(fetcher UsageFetcher, cache LockableCache, cached *UsageData) (*UsageData, error) {
+func fetchUnderLock(fetcher UsageFetcher, cache LockableCache) (*UsageData, error) {
 	// Double-check: another process may have refreshed between step 1 and lock acquire.
-	cached = cache.Get(globalCacheKey)
+	cached := cache.Get(globalCacheKey)
 	if cached != nil && !cached.IsStale {
 		debug.Logf("usage", "cache fresh after lock acquire (double-check hit): block=%.1f%%", cached.BlockPercentage)
 		return cached, nil

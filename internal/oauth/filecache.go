@@ -89,7 +89,7 @@ func (fc *FileCache) atomicWrite(path string, data []byte) error {
 	}()
 
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -181,7 +181,7 @@ func (fc *FileCache) TryLock(key string) (bool, func()) {
 		info, statErr := os.Stat(lockFile)
 		if statErr == nil && time.Since(info.ModTime()) > staleLockAge {
 			debug.Logf("filecache", "removing stale lock file (age %v)", time.Since(info.ModTime()))
-			os.Remove(lockFile)
+			_ = os.Remove(lockFile)
 			// Retry once after removing the stale lock.
 			f, err = os.OpenFile(lockFile, os.O_CREATE|os.O_EXCL, 0o600)
 			if err != nil {
@@ -191,9 +191,9 @@ func (fc *FileCache) TryLock(key string) (bool, func()) {
 			return false, nil
 		}
 	}
-	f.Close()
+	_ = f.Close()
 	release := func() {
-		os.Remove(lockFile)
+		_ = os.Remove(lockFile)
 	}
 	return true, release
 }

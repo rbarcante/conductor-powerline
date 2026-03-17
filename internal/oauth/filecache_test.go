@@ -369,7 +369,7 @@ func TestAtomicWrite_ReadOnlyDir(t *testing.T) {
 	if err := os.Chmod(dir, 0o500); err != nil {
 		t.Fatalf("failed to chmod dir: %v", err)
 	}
-	defer os.Chmod(dir, 0o700) // restore so TempDir cleanup works
+	defer func() { _ = os.Chmod(dir, 0o700) }() // restore so TempDir cleanup works
 
 	// Store should silently fail (graceful degradation).
 	fc.Store("after-readonly", data)
