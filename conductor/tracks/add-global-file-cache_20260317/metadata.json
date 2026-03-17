@@ -1,0 +1,8 @@
+{
+  "track_id": "add-global-file-cache_20260317",
+  "type": "feature",
+  "status": "pending",
+  "description": "Add global file cache with locking to avoid redundant API calls",
+  "created_at": "2026-03-17T00:00:00Z",
+  "updated_at": "2026-03-17T00:00:00Z"
+}
