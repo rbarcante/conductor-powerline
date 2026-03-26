@@ -1,11 +1,24 @@
 # Changelog
 
+## [1.3.0](https://github.com/rbarcante/conductor-powerline/compare/v1.2.0...v1.3.0) (2026-03-26)
+
+
+### Features
+
+* **oauth:** add global file cache with cross-process locking ([#13](https://github.com/rbarcante/conductor-powerline/issues/13)) ([4c0ed2c](https://github.com/rbarcante/conductor-powerline/commit/4c0ed2cd3fbda5867ccd0025e9aee7b103011600))
+
+
+### Bug Fixes
+
+* **config:** load project config from workspace path instead of CWD ([10c1c4b](https://github.com/rbarcante/conductor-powerline/commit/10c1c4b7d871a648abfe29135457f2806618daca))
+* **render:** replace hardcoded compact truncation with proportional width allocation ([#9](https://github.com/rbarcante/conductor-powerline/issues/9)) ([b1b3dee](https://github.com/rbarcante/conductor-powerline/commit/b1b3dee033ea6389105696ce9eb22575a89aab55))
+
+
 ## [1.2.0](https://github.com/rbarcante/conductor-powerline/compare/v1.1.0...v1.2.0) (2026-03-06)
 
 
 ### Features
 
-* conductor status line 1 visibility + workflow second line ([#7](https://github.com/rbarcante/conductor-powerline/issues/7)) ([363939a](https://github.com/rbarcante/conductor-powerline/commit/363939a094ccab66dca91ddf415baca8aa00a57d))
 * **segments:** hide conductor segment from line 1 when installed ([0daa393](https://github.com/rbarcante/conductor-powerline/commit/0daa393c16621ad4fdcc42d1012d2e79ab4d234f))
 * **workflow:** Add conductor workflow status second powerline line ([#5](https://github.com/rbarcante/conductor-powerline/issues/5)) ([b51b4c4](https://github.com/rbarcante/conductor-powerline/commit/b51b4c49d2d39d70dbed088718b32380396486ad))
 
