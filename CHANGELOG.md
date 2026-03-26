@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.3.0](https://github.com/rbarcante/conductor-powerline/compare/v1.2.0...v1.3.0) (2026-03-26)
+
+
+### Features
+
+* **conductor:** Create track 'Add global file cache with locking' ([08305b0](https://github.com/rbarcante/conductor-powerline/commit/08305b00e4853c6661e71a94e3605d1433b3b514))
+* **oauth:** add global file cache with cross-process locking ([480d5b4](https://github.com/rbarcante/conductor-powerline/commit/480d5b4a0193cc61cdda7f2c6c2a2463d6b044bb))
+* **oauth:** add global file cache with cross-process locking ([#13](https://github.com/rbarcante/conductor-powerline/issues/13)) ([4c0ed2c](https://github.com/rbarcante/conductor-powerline/commit/4c0ed2cd3fbda5867ccd0025e9aee7b103011600))
+
+
+### Bug Fixes
+
+* **conductor:** Create track 'Fix project config not loading from workspace path' ([4a7ca0f](https://github.com/rbarcante/conductor-powerline/commit/4a7ca0f01e75f5780d4097e7bf3f70c8f093411f))
+* **config:** load project config from workspace path instead of CWD ([10c1c4b](https://github.com/rbarcante/conductor-powerline/commit/10c1c4b7d871a648abfe29135457f2806618daca))
+* **render:** address code review findings ([aa6501c](https://github.com/rbarcante/conductor-powerline/commit/aa6501c5b4c0883fcdd98c9e0f6423d1524491fc))
+* **render:** replace hardcoded compact truncation with proportional width allocation ([#9](https://github.com/rbarcante/conductor-powerline/issues/9)) ([b1b3dee](https://github.com/rbarcante/conductor-powerline/commit/b1b3dee033ea6389105696ce9eb22575a89aab55))
+* **render:** replace hardcoded truncation with proportional compaction ([c01f8d6](https://github.com/rbarcante/conductor-powerline/commit/c01f8d60614be7efa352c7e5953b6e2bac38682c))
+* resolve merge conflicts with main in usage.go ([9bf7cd8](https://github.com/rbarcante/conductor-powerline/commit/9bf7cd824f8af5609c1e835db7348b513953859c))
+
 ## [1.2.0](https://github.com/rbarcante/conductor-powerline/compare/v1.1.0...v1.2.0) (2026-03-06)
 
 
