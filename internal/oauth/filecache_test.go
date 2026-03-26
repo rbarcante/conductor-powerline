@@ -205,6 +205,65 @@ func TestFileCacheCleanupKeepsRecentFiles(t *testing.T) {
 	}
 }
 
+func TestFileCacheTouch(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 50*time.Millisecond)
+
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+	fc.Store("test-key", data)
+
+	// Wait for TTL to expire
+	time.Sleep(60 * time.Millisecond)
+
+	// Should be stale now
+	got := fc.Get("test-key")
+	if got == nil || !got.IsStale {
+		t.Fatal("expected stale data after TTL")
+	}
+
+	// Touch resets the timestamp
+	fc.Touch("test-key")
+
+	// Should be fresh again
+	got = fc.Get("test-key")
+	if got == nil {
+		t.Fatal("expected data after touch, got nil")
+	}
+	if got.IsStale {
+		t.Error("expected fresh data after touch")
+	}
+}
+
+func TestFileCacheTouchMissingKey(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	// Touch a non-existent key — should not panic
+	fc.Touch("nonexistent")
+}
+
+func TestFileCacheCleanupSkipsLockFile(t *testing.T) {
+	dir := t.TempDir()
+	fc := NewFileCache(dir, 1*time.Minute)
+
+	// Create a .lock file and backdate it
+	lockPath := filepath.Join(dir, ".lock")
+	if err := os.WriteFile(lockPath, []byte("lock"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	oldTime := time.Now().Add(-8 * 24 * time.Hour)
+	_ = os.Chtimes(lockPath, oldTime, oldTime)
+
+	// Trigger cleanup via Store
+	data := &UsageData{BlockPercentage: 50.0, FetchedAt: time.Now()}
+	fc.Store("trigger", data)
+
+	// Lock file should still exist
+	if _, err := os.Stat(lockPath); os.IsNotExist(err) {
+		t.Fatal("expected .lock file to survive cleanup")
+	}
+}
+
 func TestFileCachePersistsAcrossInstances(t *testing.T) {
 	dir := t.TempDir()
 
