@@ -42,8 +42,8 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.APITimeout.Duration != 5*time.Second {
 		t.Errorf("expected default APITimeout 5s, got %v", cfg.APITimeout.Duration)
 	}
-	if cfg.CacheTTL.Duration != 30*time.Second {
-		t.Errorf("expected default CacheTTL 30s, got %v", cfg.CacheTTL.Duration)
+	if cfg.CacheTTL.Duration != 60*time.Second {
+		t.Errorf("expected default CacheTTL 60s, got %v", cfg.CacheTTL.Duration)
 	}
 	if cfg.TrendThreshold != 2.0 {
 		t.Errorf("expected default TrendThreshold 2.0, got %f", cfg.TrendThreshold)

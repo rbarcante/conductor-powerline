@@ -15,12 +15,47 @@ var tokenGetter = GetToken
 type UsageCache interface {
 	Store(key string, data *UsageData)
 	Get(key string) *UsageData
+	Touch(key string)
 }
 
-// FetchUsage orchestrates usage data retrieval: gets token, calls API,
-// caches on success (keyed by workspace), serves stale on failure.
-// Returns nil with error on first-run failure (no cache available).
-func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string) (*UsageData, error) {
+// FetchUsage orchestrates usage data retrieval with cache-first semantics
+// and cross-process lock coordination.
+//
+// Flow:
+//  1. Check cache — if fresh, return immediately (no API call).
+//  2. Try to acquire lock — if contention, return stale data + Touch.
+//  3. Get token, call API, store result, unlock.
+//  4. On API failure, serve stale cache.
+//
+// When lock is nil, locking is skipped (useful for tests).
+func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string, lock *CacheLock) (*UsageData, error) {
+	// 1. Cache-first: return immediately if fresh
+	cached := cache.Get(workspaceKey)
+	if cached != nil && !cached.IsStale {
+		debug.Logf("usage", "cache hit (fresh): block=%.1f%% weekly=%.1f%%", cached.BlockPercentage, cached.WeeklyPercentage)
+		return cached, nil
+	}
+
+	// 2. Cache is stale or missing — try to acquire lock
+	if lock != nil {
+		if !lock.TryLock() {
+			// Another process is calling the API — return stale data if available
+			debug.Logf("usage", "lock contention — another process is fetching")
+			if cached != nil {
+				cache.Touch(workspaceKey)
+				debug.Logf("usage", "serving stale data + touch (block=%.1f%% weekly=%.1f%%)", cached.BlockPercentage, cached.WeeklyPercentage)
+				return cached, nil
+			}
+			// Cold start: no cached data to serve, proceed without lock.
+			// Multiple concurrent first-run processes may all hit the API —
+			// acceptable tradeoff since blocking would delay the first render.
+			debug.Logf("usage", "lock contention but no cached data — proceeding without lock")
+		} else {
+			defer lock.Unlock()
+		}
+	}
+
+	// 3. Fetch token and call API
 	debug.Logf("usage", "fetching token...")
 	token, err := tokenGetter()
 	if err != nil {
@@ -37,8 +72,7 @@ func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string) (*U
 	}
 	debug.Logf("usage", "API call failed: %v", err)
 
-	// API failed — try serving cached data
-	cached := cache.Get(workspaceKey)
+	// 4. API failed — try serving cached data
 	if cached != nil {
 		cached.IsStale = true
 		debug.Logf("usage", "serving stale cached data (block=%.1f%% weekly=%.1f%%)", cached.BlockPercentage, cached.WeeklyPercentage)
