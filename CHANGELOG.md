@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/rbarcante/conductor-powerline/compare/v1.1.0...v1.2.0) (2026-03-06)
+
+
+### Features
+
+* conductor status line 1 visibility + workflow second line ([#7](https://github.com/rbarcante/conductor-powerline/issues/7)) ([363939a](https://github.com/rbarcante/conductor-powerline/commit/363939a094ccab66dca91ddf415baca8aa00a57d))
+* **segments:** hide conductor segment from line 1 when installed ([0daa393](https://github.com/rbarcante/conductor-powerline/commit/0daa393c16621ad4fdcc42d1012d2e79ab4d234f))
+* **workflow:** Add conductor workflow status second powerline line ([#5](https://github.com/rbarcante/conductor-powerline/issues/5)) ([b51b4c4](https://github.com/rbarcante/conductor-powerline/commit/b51b4c49d2d39d70dbed088718b32380396486ad))
+
+
+### Bug Fixes
+
+* address code review findings for cache-first usage and tests ([9323447](https://github.com/rbarcante/conductor-powerline/commit/93234470786ddcaa4b4457312b8193a1075e80cc))
+
 ## [1.1.0](https://github.com/rbarcante/conductor-powerline/compare/v1.0.0...v1.1.0) (2026-02-20)
 
 

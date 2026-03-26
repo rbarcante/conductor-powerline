@@ -5,5 +5,7 @@
   "branch": "bugfix/cache-cross-project-fix",
   "created": "2026-02-19",
   "description": "Fix cross-project cache contamination",
-  "updated_at": "2026-02-19T20:44:34.533487Z"
+  "updated_at": "2026-02-19T20:44:34.533487Z",
+  "track_id": "fix-cross-project-cache_20260219",
+  "created_at": "2026-02-21T14:26:24.208409Z"
 }

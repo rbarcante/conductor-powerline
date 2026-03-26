@@ -60,9 +60,15 @@ func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string, loc
 	token, err := tokenGetter()
 	if err != nil {
 		debug.Logf("usage", "token retrieval failed: %v", err)
+		if cached != nil {
+			// Staleness is transient for this render cycle only — not persisted.
+			// FileCache.Get() recomputes staleness from TTL on each read.
+			cached.IsStale = true
+			return cached, nil
+		}
 		return nil, err
 	}
-	debug.Logf("usage", "token retrieved, calling API...")
+
 	data, err := fetcher.FetchUsageData(token)
 	if err == nil {
 		data.IsStale = false
@@ -74,12 +80,12 @@ func FetchUsage(fetcher UsageFetcher, cache UsageCache, workspaceKey string, loc
 
 	// 4. API failed — try serving cached data
 	if cached != nil {
+		// Staleness is transient for this render cycle only — not persisted.
+		// FileCache.Get() recomputes staleness from TTL on each read.
 		cached.IsStale = true
-		debug.Logf("usage", "serving stale cached data (block=%.1f%% weekly=%.1f%%)", cached.BlockPercentage, cached.WeeklyPercentage)
+		debug.Logf("usage", "serving stale cached data")
 		return cached, nil
 	}
 
-	// First run, no cache — return error
-	debug.Logf("usage", "no cached data available — returning error")
 	return nil, errors.New("oauth: API failed and no cached data available")
 }
